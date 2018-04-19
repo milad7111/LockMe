@@ -143,51 +143,53 @@ public class Defaults {
                 : Boolean.valueOf(false);
     }
 
-//    public static void syncUserLockInLocal() {
-//        StringBuilder mWhereClause = new StringBuilder();
-//        DataQueryBuilder queryBuilder = DataQueryBuilder.create();
-//        queryBuilder.setRelationsDepth(Integer.valueOf(2));
-//        mWhereClause.append("user");
-//        mWhereClause.append(".objectid=\'").append(Backendless.UserService.CurrentUser().getObjectId()).append("\'");
-//        queryBuilder.setWhereClause(String.valueOf(mWhereClause));
-//
-//        Backendless.Data.of("user_lock").find(queryBuilder, new AsyncCallback() {
-//            public void handleResponse(List<Map> maps) {
-//                if (maps.size() != 0) {
-//                    new JSONArray();
-//                    Iterator var3 = maps.iterator();
-//
-//                    while (var3.hasNext()) {
-//                        Map map = (Map) var3.next();
-//                        JSONObject mUniqueLock = new JSONObject();
-//
-//                        try {
-//                            mUniqueLock.put("serial_number", Defaults.getLockSerialNumber(map));
-//                            mUniqueLock.put("name", map.get("name"));
-//                            mUniqueLock.put("wifi_name", Defaults.getValueFromLockObject(map, "wifi_name"));
-//                            mUniqueLock.put("admin_status", map.get("admin_status"));
-//                            mUniqueLock.put("lock_status", map.get("lock").toString());
-//                            mUniqueLock.put("door_status", Defaults.getDoorStatus(map));
-//                        } catch (JSONException var7) {
-//                            Log.e(this.getClass().getName(), var7.getMessage());
-//                        }
-//                    }
-//                }
-//
-//            }
-//
-//            public void handleFault(BackendlessFault backendlessFault) {
-//                Log.e(backendlessFault.getCode(), backendlessFault.getMessage());
-//            }
-//        });
-//    }
+    public static void syncUserLockInLocal() {
+        StringBuilder mWhereClause = new StringBuilder();
+        DataQueryBuilder queryBuilder = DataQueryBuilder.create();
+        queryBuilder.setRelationsDepth(Integer.valueOf(2));
+        mWhereClause.append("user");
+        mWhereClause.append(".objectid=\'").append(Backendless.UserService.CurrentUser().getObjectId()).append("\'");
+        queryBuilder.setWhereClause(String.valueOf(mWhereClause));
+
+        Backendless.Data.of("user_lock").find(queryBuilder, new AsyncCallback<List<Map>>() {
+
+            @Override
+            public void handleResponse(List<Map> maps) {
+                if (maps.size() != 0) {
+                    new JSONArray();
+                    Iterator var3 = maps.iterator();
+
+                    while (var3.hasNext()) {
+                        Map map = (Map) var3.next();
+                        JSONObject mUniqueLock = new JSONObject();
+
+                        try {
+                            mUniqueLock.put("serial_number", Defaults.getLockSerialNumber(map));
+                            mUniqueLock.put("name", map.get("name"));
+                            mUniqueLock.put("wifi_name", Defaults.getValueFromLockObject(map, "wifi_name"));
+                            mUniqueLock.put("admin_status", map.get("admin_status"));
+                            mUniqueLock.put("lock_status", map.get("lock").toString());
+                            mUniqueLock.put("door_status", Defaults.getDoorStatus(map));
+                        } catch (JSONException var7) {
+                            Log.e(this.getClass().getName(), var7.getMessage());
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void handleFault(BackendlessFault fault) {
+                Log.e(fault.getCode(), fault.getMessage());
+            }
+        });
+    }
 
     public static void addUserLockInLocal(Context context, JSONObject userlock) {
         try {
             JSONArray e = new JSONArray(
                     readSharedPreferenceObject(context, "locks", "").equals("")
-                    ? "[]"
-                    : readSharedPreferenceObject(context, "locks", ""));
+                            ? "[]"
+                            : readSharedPreferenceObject(context, "locks", ""));
             e.put(userlock);
             setValueInSharedPreferenceObject(context, "locks", e.toString());
         } catch (JSONException var3) {
@@ -200,7 +202,7 @@ public class Defaults {
         try {
             JSONArray e = new JSONArray(
                     readSharedPreferenceObject(context, "locks", "").equals("")
-                    ? "[]"
+                            ? "[]"
                             : readSharedPreferenceObject(context, "locks", ""));
 
             for (int i = 0; i < e.length(); ++i) {
@@ -222,8 +224,8 @@ public class Defaults {
         try {
             JSONArray e = new JSONArray(
                     readSharedPreferenceObject(context, "locks", "").equals("")
-                    ? "[]"
-                    : readSharedPreferenceObject(context, "locks", ""));
+                            ? "[]"
+                            : readSharedPreferenceObject(context, "locks", ""));
 
             for (int i = 0; i < e.length(); ++i) {
                 mListOfWifiNames.add((new JSONObject(e.get(i).toString())).get("wifi_name").toString());
