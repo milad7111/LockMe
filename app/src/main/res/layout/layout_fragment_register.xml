@@ -15,7 +15,7 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="Email: site@example.com"
-            android:inputType="text|textCapCharacters|textCapWords|textCapSentences|textAutoCorrect|textAutoComplete|textMultiLine|textImeMultiLine|textNoSuggestions|textUri|textEmailAddress|textEmailSubject|textShortMessage|textLongMessage|textPersonName|textPostalAddress|textPassword|textVisiblePassword|textWebEditText|textFilter|textPhonetic|textWebEmailAddress|textWebPassword|phone|time" />
+            android:inputType="textEmailAddress" />
 
         <EditText
             android:id="@+id/edt_register_mobile_number"
@@ -23,7 +23,7 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="Mobile Number"
-            android:inputType="text|textCapCharacters|textCapWords|textCapSentences|textAutoCorrect|textAutoComplete|textMultiLine|textImeMultiLine|textNoSuggestions|textUri|textEmailAddress|textEmailSubject|textShortMessage|textLongMessage|textPersonName|textPostalAddress|textPassword|textVisiblePassword|textWebEditText|textFilter|textPhonetic|textWebEmailAddress|textWebPassword|phone|time" />
+            android:inputType="text" />
 
         <EditText
             android:id="@+id/edt_register_password"
@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="Password"
-            android:inputType="text|textCapCharacters|textCapWords|textCapSentences|textAutoCorrect|textAutoComplete|textMultiLine|textImeMultiLine|textNoSuggestions|textUri|textEmailAddress|textEmailSubject|textShortMessage|textLongMessage|textPersonName|textPostalAddress|textPassword|textVisiblePassword|textWebEditText|textFilter|textPhonetic|textWebEmailAddress|textWebPassword|phone" />
+            android:inputType="textPassword" />
 
         <EditText
             android:id="@+id/edt_repeat_password"
@@ -39,11 +39,11 @@
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="Re-Enter Password"
-            android:inputType="text|textCapCharacters|textCapWords|textCapSentences|textAutoCorrect|textAutoComplete|textMultiLine|textImeMultiLine|textNoSuggestions|textUri|textEmailAddress|textEmailSubject|textShortMessage|textLongMessage|textPersonName|textPostalAddress|textPassword|textVisiblePassword|textWebEditText|textFilter|textPhonetic|textWebEmailAddress|textWebPassword|phone" />
+            android:inputType="textPassword" />
 
         <ProgressBar
             android:id="@+id/prg_resgister"
-            style="@style/AppTheme"
+            style="@style/MyMaterialTheme"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="invisible" />

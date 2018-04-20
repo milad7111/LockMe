@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupViewPager(ViewPager viewPager) {
-        adapter = new MainActivity.ViewPagerAdapter(this.getSupportFragmentManager());
+        adapter = new MainActivity.ViewPagerAdapter(getSupportFragmentManager());
         adapter.addFragment(new LoginFragment(), this.getString(R.string.fragment_login));
         adapter.addFragment(new RegisterFragment(), this.getString(R.string.fragment_register));
         viewPager.setAdapter(adapter);

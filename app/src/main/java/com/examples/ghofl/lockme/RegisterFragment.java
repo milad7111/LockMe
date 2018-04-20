@@ -40,6 +40,7 @@ public class RegisterFragment extends Fragment {
         _edt_repeat_password = rootView.findViewById(R.id.edt_repeat_password);
         _btn_register = rootView.findViewById(R.id.btn_register);
         _prg_register = rootView.findViewById(R.id.prg_resgister);
+
         _btn_register.setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
                 if (!_edt_register_password.getText().toString().equals(_edt_repeat_password.getText().toString())) {
@@ -76,6 +77,7 @@ public class RegisterFragment extends Fragment {
                 }
             }
         });
+
         return rootView;
     }
 }
