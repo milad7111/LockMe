@@ -47,7 +47,7 @@ public class LoginFragment extends Fragment {
 
         if (!mail.equals(getString(R.string.empty_phrase))) {
             _edt_mail.setText(mail);
-            if (!password.equals(this.getString(R.string.empty_phrase))) {
+            if (!password.equals(getString(R.string.empty_phrase))) {
                 _edt_login_password.setText(password);
                 _chbx_remember.setChecked(true);
             }
@@ -63,12 +63,14 @@ public class LoginFragment extends Fragment {
                             @Override
                             public void handleResponse(Object response) {
                                 _prg_login.setVisibility(View.INVISIBLE);
-                                Defaults.setValueInSharedPreferenceObject(getActivity(), LoginFragment.this.getString(R.string.share_preference_parameter_mail), _edt_mail.getText().toString());
+                                Defaults.setValueInSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_mail),
+                                        _edt_mail.getText().toString());
 
                                 if (_chbx_remember.isChecked()) {
-                                    Defaults.setValueInSharedPreferenceObject(getActivity(), LoginFragment.this.getString(R.string.share_preference_parameter_password), _edt_login_password.getText().toString());
+                                    Defaults.setValueInSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_password), _edt_login_password.getText().toString());
                                 } else
-                                    Defaults.setValueInSharedPreferenceObject(getActivity(), LoginFragment.this.getString(R.string.share_preference_parameter_password), LoginFragment.this.getString(R.string.empty_phrase));
+                                    Defaults.setValueInSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_password),
+                                            getString(R.string.empty_phrase));
 
                                 ((MainActivity) getActivity()).comeFromLogin();
                             }
@@ -92,9 +94,9 @@ public class LoginFragment extends Fragment {
     public void onStart() {
         super.onStart();
         readMailAndPasswordFromSharedPreference();
-        if (!mail.equals(this.getString(R.string.empty_phrase))) {
+        if (!mail.equals(getString(R.string.empty_phrase))) {
             _edt_mail.setText(mail);
-            if (!password.equals(this.getString(R.string.empty_phrase))) {
+            if (!password.equals(getString(R.string.empty_phrase))) {
                 _edt_login_password.setText(password);
                 _chbx_remember.setChecked(true);
             }
@@ -107,15 +109,15 @@ public class LoginFragment extends Fragment {
     }
 
     private void setVisibilityOfSkipButton() {
-        if (!Defaults.checkInternet().booleanValue() && Defaults.hasAdminLock(getActivity()).booleanValue())
+        if (!Defaults.checkInternet() && Defaults.hasAdminLock(getActivity()))
             _btn_skip_login.setVisibility(View.VISIBLE);
         else
             _btn_skip_login.setVisibility(View.INVISIBLE);
     }
 
     private void readMailAndPasswordFromSharedPreference() {
-        mail = Defaults.readSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_mail), this.getString(R.string.empty_phrase));
-        password = Defaults.readSharedPreferenceObject(getActivity(), this.getString(R.string.share_preference_parameter_password), this.getString(R.string.empty_phrase));
+        mail = Defaults.readSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_mail), getString(R.string.empty_phrase));
+        password = Defaults.readSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_password), getString(R.string.empty_phrase));
     }
 }
 

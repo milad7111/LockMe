@@ -12,7 +12,7 @@ import android.widget.Button;
 
 public class NoLockFragment extends Fragment {
 
-    private NoLockFragment.OnFragmentInteractionListener mListener;
+    private OnFragmentInteractionListener mListener;
     private Button _btn_add_first_lock;
 
     public NoLockFragment() {
@@ -32,29 +32,29 @@ public class NoLockFragment extends Fragment {
     }
 
     public void onButtonPressed(Uri uri) {
-        if (this.mListener != null) {
-            this.mListener.onFragmentInteraction(uri);
+        if (mListener != null) {
+            mListener.onFragmentInteraction(uri);
         }
     }
 
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof NoLockFragment.OnFragmentInteractionListener)
-            this.mListener = (NoLockFragment.OnFragmentInteractionListener) context;
+        if (context instanceof OnFragmentInteractionListener)
+            mListener = (OnFragmentInteractionListener) context;
         else
             throw new RuntimeException(context.toString() + " must implement OnFragmentInteractionListener");
     }
 
     public void onDetach() {
         super.onDetach();
-        this.mListener = null;
+        mListener = null;
     }
 
     public void onStart() {
         super.onStart();
-        this._btn_add_first_lock.setOnClickListener(new OnClickListener() {
+        _btn_add_first_lock.setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
-//                ((LockActivity)getActivity()).LoadFragment(new AddLockFragment(), NoLockFragment.this.getString(2131427404));
+                ((LockActivity)getActivity()).LoadFragment(new AddLockFragment(), getString(R.string.fragment_add_lock_fragment));
             }
         });
     }
