@@ -90,6 +90,7 @@
     <string name="title_activity_login">Sign in</string>
     <string name="toast_password_not_match">Password does not match repeated one</string>
     <string name="toast_user_registered">User has been registered</string>
+    <string name="permission_wifi_needed">wifi is off</string>
 
 </resources>
 

@@ -54,7 +54,7 @@ public class NoLockFragment extends Fragment {
         super.onStart();
         this._btn_add_first_lock.setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
-//                ((LockActivity)NoLockFragment.this.getActivity()).LoadFragment(new AddLockFragment(), NoLockFragment.this.getString(2131427404));
+//                ((LockActivity)getActivity()).LoadFragment(new AddLockFragment(), NoLockFragment.this.getString(2131427404));
             }
         });
     }
