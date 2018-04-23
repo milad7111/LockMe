@@ -43,7 +43,7 @@
             android:value="26.0.2" />
 
         <activity
-            android:name="com.examples.ghofl.lockme.LockActivity"
+            android:name=".LockActivity"
             android:label="@string/title_activity_lock"
             android:theme="@style/MyMaterialTheme" />
 

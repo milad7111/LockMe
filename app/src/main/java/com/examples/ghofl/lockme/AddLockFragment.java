@@ -266,7 +266,7 @@ public class AddLockFragment extends Fragment {
 
                 for (int i = 0; i < mWifiLockList.size(); ++i) {
                     if ((mWifiLockList.get(i)).SSID.contains("Lock Wifi") && !mSavedWifiNames.contains((mWifiLockList.get(i)).SSID)) {
-                        mWifiLockArrayList.add(((ScanResult) mWifiLockList.get(i)).SSID);
+                        mWifiLockArrayList.add((mWifiLockList.get(i)).SSID);
                     }
                 }
 

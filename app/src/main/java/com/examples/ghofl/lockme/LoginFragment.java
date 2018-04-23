@@ -12,6 +12,12 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.backendless.Backendless;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
@@ -83,11 +89,13 @@ public class LoginFragment extends Fragment {
                         });
             }
         });
+
         _btn_skip_login.setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
                 ((MainActivity) getActivity()).comeFromLogin();
             }
         });
+
         return rootView;
     }
 
@@ -105,11 +113,25 @@ public class LoginFragment extends Fragment {
 
     public void onResume() {
         super.onResume();
-        setVisibilityOfSkipButton();
+
+        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
+        String url = getString(R.string.dummy_http_url);
+        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+            @Override
+            public void onResponse(Object response) {
+                Log.e(getTag(), response.toString() + getString(R.string.log_connected_to_internet));
+            }
+        }, new Response.ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+                setVisibilityOfSkipButton();
+                Log.e(getTag(), error.getMessage());
+            }
+        });
+        MyRequestQueue.add(MyStringRequest);
     }
 
     private void setVisibilityOfSkipButton() {
-        if (!Defaults.checkInternet() && Defaults.hasAdminLock(getActivity()))
+        if (Defaults.hasAdminLock(getActivity()))
             _btn_skip_login.setVisibility(View.VISIBLE);
         else
             _btn_skip_login.setVisibility(View.INVISIBLE);

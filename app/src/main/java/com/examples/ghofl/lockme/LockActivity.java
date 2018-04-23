@@ -28,6 +28,7 @@ import java.util.Map;
 public class LockActivity extends AppCompatActivity {
     public DataQueryBuilder queryBuilder;
     public BackendlessUser mCurrentUser;
+    public List<Map> mResponseListMap;
 
     public LockActivity() {
     }
@@ -50,31 +51,26 @@ public class LockActivity extends AppCompatActivity {
     }
 
     private void caheckExistSavedLock() {
-        if (Defaults.checkInternet().booleanValue()) {
-            Toast.makeText(this, "", Toast.LENGTH_LONG).show();
-        }
-
         queryBuilder = DataQueryBuilder.create();
-        queryBuilder.setRelationsDepth(Integer.valueOf(2));
+        queryBuilder.setRelationsDepth(2);
         StringBuilder mWhereClause = new StringBuilder();
         mWhereClause.append("user");
         mWhereClause.append(".objectId=\'").append(mCurrentUser.getObjectId()).append("\'");
         queryBuilder.setWhereClause(String.valueOf(mWhereClause));
         Backendless.Data.of("user_lock").find(queryBuilder, new AsyncCallback<List<Map>>() {
             public void handleResponse(List<Map> maps) {
-                if (maps.size() == 0) {
-//                    LoadFragment(new NoLockFragment(), getString(2131427409));
-                } else {
-//                    LoadFragment(new LockListFragment(), getString(2131427407));
+                if (maps.size() == 0)
+                    LoadFragment(new NoLockFragment(), getString(R.string.fragment_no_lock_fragment));
+                else {
+                    mResponseListMap = maps;
+                    LoadFragment(new LockListFragment(), getString(R.string.fragment_lock_list_fragment));
                 }
             }
 
             public void handleFault(BackendlessFault backendlessFault) {
                 Log.e(backendlessFault.getCode(), backendlessFault.getMessage());
-                if (Defaults.hasAdminLock(getBaseContext()).booleanValue()) {
-//                    LoadFragment(new LockListFragment(), getString(2131427407));
-                }
-
+                if (Defaults.hasAdminLock(getBaseContext()))
+                    LoadFragment(new LockListFragment(), getString(R.string.fragment_lock_list_fragment));
             }
         });
     }
@@ -87,10 +83,10 @@ public class LockActivity extends AppCompatActivity {
             public void onResponse(Object response) {
                 Toast.makeText(getBaseContext(), response.toString(), Toast.LENGTH_LONG).show();
                 Bundle mLockInfoFragmentBundle = new Bundle();
-//                mLockInfoFragmentBundle.putString("SerialNumber", serialnumber);
-//                LockInfoFragment mLockInfoFragment = new LockInfoFragment();
-//                mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
-//                LoadFragment(mLockInfoFragment, getString(2131427406));
+                mLockInfoFragmentBundle.putString("SerialNumber", serialnumber);
+                LockInfoFragment mLockInfoFragment = new LockInfoFragment();
+                mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
+                LoadFragment(mLockInfoFragment, getString(R.string.fragment_lock_info_fragment));
             }
         }, new ErrorListener() {
             public void onErrorResponse(VolleyError error) {
