@@ -62,8 +62,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void comeFromLogin() {
-//        Intent mLockActivity = new Intent(this, LockActivity.class);
-//        this.startActivity(mLockActivity);
+        Intent mLockActivity = new Intent(this, LockActivity.class);
+        startActivity(mLockActivity);
     }
 
     class ViewPagerAdapter extends FragmentPagerAdapter {

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="16dp"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2.0">
+
+            <ImageView
+                android:id="@+id/img_connect_lock_to_internet"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:layout_weight="1.0"
+                android:src="@drawable/img_connect_lock_to_internet" />
+
+            <ImageView
+                android:id="@+id/img_lock_wifi_status"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_weight="1.0"
+                android:src="@drawable/img_wifi_status" />
+
+        </RelativeLayout>
+
+        <ProgressBar
+            android:id="@+id/prg_change_lock_status"
+            style="@style/MyMaterialTheme"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="invisible" />
+
+        <Button
+            android:id="@+id/btn_change_lock_status"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1.0"
+            android:text="Lock" />
+
+        <RelativeLayout
+            android:id="@+id/lnrl_lock_door_status"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="4.0"
+            android:gravity="center"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/img_door_status"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_alignTop="@id/img_lock_status"
+                android:layout_toRightOf="@id/img_lock_status"
+                android:src="@drawable/img_open_door" />
+
+            <ImageView
+                android:id="@+id/img_lock_status"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/img_open_lock" />
+
+        </RelativeLayout>
+
+        <ProgressBar
+            android:id="@+id/prg_load_lock_door_status"
+            style="@style/MyMaterialTheme"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="4.0"
+            android:gravity="center" />
+
+    </LinearLayout>
+
+</FrameLayout>

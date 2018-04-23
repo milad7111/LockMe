@@ -12,6 +12,12 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.backendless.Backendless;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
@@ -47,7 +53,7 @@ public class LoginFragment extends Fragment {
 
         if (!mail.equals(getString(R.string.empty_phrase))) {
             _edt_mail.setText(mail);
-            if (!password.equals(this.getString(R.string.empty_phrase))) {
+            if (!password.equals(getString(R.string.empty_phrase))) {
                 _edt_login_password.setText(password);
                 _chbx_remember.setChecked(true);
             }
@@ -63,12 +69,14 @@ public class LoginFragment extends Fragment {
                             @Override
                             public void handleResponse(Object response) {
                                 _prg_login.setVisibility(View.INVISIBLE);
-                                Defaults.setValueInSharedPreferenceObject(getActivity(), LoginFragment.this.getString(R.string.share_preference_parameter_mail), _edt_mail.getText().toString());
+                                Defaults.setValueInSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_mail),
+                                        _edt_mail.getText().toString());
 
                                 if (_chbx_remember.isChecked()) {
-                                    Defaults.setValueInSharedPreferenceObject(getActivity(), LoginFragment.this.getString(R.string.share_preference_parameter_password), _edt_login_password.getText().toString());
+                                    Defaults.setValueInSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_password), _edt_login_password.getText().toString());
                                 } else
-                                    Defaults.setValueInSharedPreferenceObject(getActivity(), LoginFragment.this.getString(R.string.share_preference_parameter_password), LoginFragment.this.getString(R.string.empty_phrase));
+                                    Defaults.setValueInSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_password),
+                                            getString(R.string.empty_phrase));
 
                                 ((MainActivity) getActivity()).comeFromLogin();
                             }
@@ -81,20 +89,22 @@ public class LoginFragment extends Fragment {
                         });
             }
         });
+
         _btn_skip_login.setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
                 ((MainActivity) getActivity()).comeFromLogin();
             }
         });
+
         return rootView;
     }
 
     public void onStart() {
         super.onStart();
         readMailAndPasswordFromSharedPreference();
-        if (!mail.equals(this.getString(R.string.empty_phrase))) {
+        if (!mail.equals(getString(R.string.empty_phrase))) {
             _edt_mail.setText(mail);
-            if (!password.equals(this.getString(R.string.empty_phrase))) {
+            if (!password.equals(getString(R.string.empty_phrase))) {
                 _edt_login_password.setText(password);
                 _chbx_remember.setChecked(true);
             }
@@ -103,19 +113,33 @@ public class LoginFragment extends Fragment {
 
     public void onResume() {
         super.onResume();
-        setVisibilityOfSkipButton();
+
+        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
+        String url = getString(R.string.dummy_http_url);
+        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+            @Override
+            public void onResponse(Object response) {
+                Log.e(getTag(), response.toString() + getString(R.string.log_connected_to_internet));
+            }
+        }, new Response.ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+                setVisibilityOfSkipButton();
+                Log.e(getTag(), error.getMessage());
+            }
+        });
+        MyRequestQueue.add(MyStringRequest);
     }
 
     private void setVisibilityOfSkipButton() {
-        if (!Defaults.checkInternet().booleanValue() && Defaults.hasAdminLock(getActivity()).booleanValue())
+        if (Defaults.hasAdminLock(getActivity()))
             _btn_skip_login.setVisibility(View.VISIBLE);
         else
             _btn_skip_login.setVisibility(View.INVISIBLE);
     }
 
     private void readMailAndPasswordFromSharedPreference() {
-        mail = Defaults.readSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_mail), this.getString(R.string.empty_phrase));
-        password = Defaults.readSharedPreferenceObject(getActivity(), this.getString(R.string.share_preference_parameter_password), this.getString(R.string.empty_phrase));
+        mail = Defaults.readSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_mail), getString(R.string.empty_phrase));
+        password = Defaults.readSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_password), getString(R.string.empty_phrase));
     }
 }
 

@@ -29,9 +29,11 @@
         android:largeHeap="true"
         android:testOnly="true"
         android:theme="@style/MyMaterialTheme">
-        <activity android:name="com.examples.ghofl.lockme.MainActivity">
+
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -39,6 +41,11 @@
         <meta-data
             android:name="android.support.VERSION"
             android:value="26.0.2" />
+
+        <activity
+            android:name=".LockActivity"
+            android:label="@string/title_activity_lock"
+            android:theme="@style/MyMaterialTheme" />
 
     </application>
 
