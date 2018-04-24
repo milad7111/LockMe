@@ -71,6 +71,8 @@ public class LockActivity extends AppCompatActivity {
                 Log.e(backendlessFault.getCode(), backendlessFault.getMessage());
                 if (Defaults.hasAdminLock(getBaseContext()))
                     LoadFragment(new LockListFragment(), getString(R.string.fragment_lock_list_fragment));
+                else
+                    LoadFragment(new NoLockFragment(), getString(R.string.fragment_no_lock_fragment));
             }
         });
     }
