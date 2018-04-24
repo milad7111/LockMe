@@ -5,6 +5,7 @@ import android.app.Fragment;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -62,101 +63,83 @@ public class LockInfoFragment extends Fragment {
 
         if (getArguments() != null) {
             mLockSerialNumber = getArguments().getString("SerialNumber");
-            new Defaults();
-            if (Defaults.checkInternet()) {
-                StringBuilder mLockObject = new StringBuilder();
-                mLockObject.append("serial_number");
-                mLockObject.append(".result = \'").append(mLockSerialNumber).append("\'");
-                ((LockActivity) getActivity()).queryBuilder.setWhereClause(String.valueOf(mLockObject));
-                Backendless.Data.of("lock").find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Map>>() {
-                    public void handleResponse(List<Map> maps) {
-                        if (maps.size() != 0) {
-                            if (Defaults.getLockStatus(maps.get(0))) {
-                                _img_lock_status.setImageResource(R.drawable.img_close_lock);
-                            } else {
-                                _img_lock_status.setImageResource(R.drawable.img_open_lock);
-                            }
-
-                            if (Defaults.getDoorStatus(maps.get(0))) {
-                                _img_door_status.setImageResource(R.drawable.img_close_door);
-                            } else {
-                                _img_door_status.setImageResource(R.drawable.img_open_door);
-                            }
-
-                            _prg_load_lock_door_status.setVisibility(View.GONE);
-                            _lnrl_lock_door_status.setVisibility(View.VISIBLE);
+            StringBuilder mLockObject = new StringBuilder();
+            mLockObject.append("serial_number");
+            mLockObject.append(".result = \'").append(mLockSerialNumber).append("\'");
+            ((LockActivity) getActivity()).queryBuilder.setWhereClause(String.valueOf(mLockObject));
+            Backendless.Data.of("lock").find(((LockActivity) getActivity()).queryBuilder,
+                    new AsyncCallback<List<Map>>() {
+                public void handleResponse(List<Map> maps) {
+                    if (maps.size() != 0) {
+                        if (Defaults.getLockStatus(maps.get(0))) {
+                            _img_lock_status.setImageResource(R.drawable.img_close_lock);
+                        } else {
+                            _img_lock_status.setImageResource(R.drawable.img_open_lock);
                         }
 
-                    }
+                        if (Defaults.getDoorStatus(maps.get(0))) {
+                            _img_door_status.setImageResource(R.drawable.img_close_door);
+                        } else {
+                            _img_door_status.setImageResource(R.drawable.img_open_door);
+                        }
 
-                    public void handleFault(BackendlessFault backendlessFault) {
-                        Log.e(backendlessFault.getCode(), backendlessFault.getMessage());
+                        _prg_load_lock_door_status.setVisibility(View.GONE);
+                        _lnrl_lock_door_status.setVisibility(View.VISIBLE);
                     }
-                });
-            } else {
-                JSONObject mLockObject1 = Defaults.getLockFromLocalWithSerialNumber(getActivity(), mLockSerialNumber);
+                }
 
-                try {
-                    if (mLockObject1.getBoolean("lock_status")) {
-                        _img_lock_status.setImageResource(R.drawable.img_close_lock);
-                    } else {
-                        _img_lock_status.setImageResource(R.drawable.img_open_lock);
+            public void handleFault(BackendlessFault backendlessFault) {
+                Log.e(getTag(), backendlessFault.getMessage());
+
+                JSONObject mLockObject = Defaults.getLockFromLocalWithSerialNumber(getActivity(), mLockSerialNumber);
+
+                if (mLockObject != null) {
+                    try {
+                        if (mLockObject.getBoolean("lock_status")) {
+                            _img_lock_status.setImageResource(R.drawable.img_close_lock);
+                        } else {
+                            _img_lock_status.setImageResource(R.drawable.img_open_lock);
+                        }
+
+                        if (mLockObject.getBoolean("door_status")) {
+                            _img_door_status.setImageResource(R.drawable.img_close_door);
+                        } else {
+                            _img_door_status.setImageResource(R.drawable.img_open_door);
+                        }
+
+                        _prg_load_lock_door_status.setVisibility(View.GONE);
+                        _lnrl_lock_door_status.setVisibility(View.VISIBLE);
+                    } catch (JSONException e) {
+                        Log.e(getTag(), e.getMessage());
                     }
-
-                    if (mLockObject1.getBoolean("door_status")) {
-                        _img_door_status.setImageResource(R.drawable.img_close_door);
-                    } else {
-                        _img_door_status.setImageResource(R.drawable.img_open_door);
-                    }
-
-                    _prg_load_lock_door_status.setVisibility(View.GONE);
-                    _lnrl_lock_door_status.setVisibility(View.VISIBLE);
-                } catch (JSONException var7) {
-                    Log.e(getTag(), var7.getMessage());
                 }
             }
+            });
         }
 
         _btn_change_lock_status.setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
-                new Defaults();
-                if (Defaults.checkInternet()) {
-                    PublishOptions mPublishOptions = new PublishOptions();
-                    mPublishOptions.setSubtopic("change_lock_status.1200.user_id");
-                    SubscriptionOptions mSubscriptionOptions = new SubscriptionOptions();
-                    mSubscriptionOptions.setSubtopic("change_lock_status.1300.user_id");
-                    Backendless.Messaging.publish("channel200", "open", mPublishOptions, new AsyncCallback<MessageStatus>() {
-                        public void handleResponse(MessageStatus messageStatus) {
-                            Log.i(getTag(), messageStatus.toString());
-                        }
+                PublishOptions mPublishOptions = new PublishOptions();
+                mPublishOptions.setSubtopic("change_lock_status.1200.user_id");
+                Backendless.Messaging.publish("channel200", "open", mPublishOptions, new AsyncCallback<MessageStatus>() {
+                    public void handleResponse(MessageStatus messageStatus) {
+                        Log.i(getTag(), messageStatus.toString());
+                    }
 
-                        public void handleFault(BackendlessFault backendlessFault) {
-                            Log.e(getTag(), backendlessFault.getMessage());
-                        }
-                    });
-                    Backendless.Messaging.subscribe("channel200", new AsyncCallback<List<Message>>() {
-                        public void handleResponse(List<Message> response) {
-                            Message message = response.get(0);
-                            if (message.getData().equals("done")) {
-                                _img_lock_status.setImageResource(R.drawable.img_open_door);
-                            }
+                public void handleFault(BackendlessFault backendlessFault) {
+                    Log.e(getTag(), backendlessFault.getMessage());
 
-                        }
+                    final Snackbar mbackendlessFaultSnackBar = Snackbar.make(getView(),
+                            backendlessFault.getMessage(), Snackbar.LENGTH_INDEFINITE);
 
-                        public void handleFault(BackendlessFault fault) {
-                            Log.e(getTag(), fault.getMessage());
+                    mbackendlessFaultSnackBar.setAction(R.string.dialog_button_confirm, new OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            mbackendlessFaultSnackBar.dismiss();
                         }
-                    }, mSubscriptionOptions, new AsyncCallback<Subscription>() {
-                        public void handleResponse(Subscription response) {
-                            Log.e(getTag(), response.toString());
-                        }
-
-                        public void handleFault(BackendlessFault fault) {
-                            Log.e(getTag(), fault.getMessage());
-                        }
-                    });
+                    }).show();
                 }
-
+                });
             }
         });
         return rootView;

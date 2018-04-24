@@ -15,7 +15,7 @@ public class Lock {
 
     Integer mLockID;
     String mSerialNumber;
-    Integer mLockStatus;
+    Boolean mLockStatus;
     Boolean mDoorStatus;
     Boolean mIsConnected;
     Integer mBatteryCharge;
@@ -38,11 +38,11 @@ public class Lock {
         this.mSerialNumber = mSerialNumber;
     }
 
-    public Integer getmLockStatus() {
+    public Boolean getmLockStatus() {
         return mLockStatus;
     }
 
-    public void setmLockStatus(Integer mLockStatus) {
+    public void setmLockStatus(Boolean mLockStatus) {
         this.mLockStatus = mLockStatus;
     }
 
