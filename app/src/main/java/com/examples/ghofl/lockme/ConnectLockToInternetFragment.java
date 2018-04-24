@@ -9,7 +9,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.VolleyError;
@@ -18,8 +20,14 @@ import com.android.volley.Response.Listener;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
+import java.util.ArrayList;
+
 public class ConnectLockToInternetFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
+
+    private ListView _lsv_internet_network;
+    private ArrayList<String> mWifiNetworks;
+    private ArrayAdapter<String> mArrayAdapter;
 
     public ConnectLockToInternetFragment() {
     }
@@ -29,7 +37,11 @@ public class ConnectLockToInternetFragment extends Fragment {
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.layout_fragment_connect_lock_to_internet, container, false);
+        View rootView = inflater.inflate(R.layout.layout_fragment_connect_lock_to_internet, container, false);
+
+        _lsv_internet_network = rootView.findViewById(R.id.lsv_internet_network);
+
+        return rootView;
     }
 
     public void onButtonPressed(Uri uri) {
@@ -55,20 +67,30 @@ public class ConnectLockToInternetFragment extends Fragment {
 
     public void onStart() {
         super.onStart();
-        getListOfAvailableNetworks(getTag());
+        getListOfAvailableNetworks();
     }
 
-    private void getListOfAvailableNetworks(final String tag) {
+    private void getListOfAvailableNetworks() {
         RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity());
-        String url = getString(R.string.esp_http_address) + getString(R.string.esp_connect);
+        String url = getString(R.string.esp_http_address) + getString(R.string.esp_get_networks);
         StringRequest MyStringRequest = new StringRequest(0, url, new Listener() {
             @Override
             public void onResponse(Object response) {
-                Toast.makeText(getActivity(), response.toString(), Toast.LENGTH_SHORT).show();
+                Log.i(getTag(), response.toString());
+
+                mWifiNetworks = new ArrayList<>();
+                mArrayAdapter = new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, mWifiNetworks);
+                _lsv_internet_network.setAdapter(null);
+                _lsv_internet_network.setAdapter(mArrayAdapter);
+                _lsv_internet_network.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+                    }
+                });
             }
         }, new ErrorListener() {
             public void onErrorResponse(VolleyError error) {
-                Log.e(tag, error.getMessage());
+                Log.e(getTag(), error.toString());
             }
         });
         MyRequestQueue.add(MyStringRequest);

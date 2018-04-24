@@ -91,8 +91,15 @@
     <string name="toast_password_not_match">Password does not match repeated one</string>
     <string name="toast_user_registered">User has been registered</string>
     <string name="permission_wifi_needed">wifi is off</string>
-    <string name="dummy_http_url">http://www.google.com</string>
+    <string name="dummy_http_url">https://api.backendless.com/</string>
     <string name="log_connected_to_internet">you are connected to internet.</string>
+    <string name="dialog_connect_network">Choose way of connect</string>
+    <string name="dialog_button_data">Mobile Data</string>
+    <string name="dialog_button_wifi_network">Wifi</string>
+    <string name="dialog_choose_how_to_connect_internet">Choose how to connect to internet.</string>
+    <string name="there_is_no_lock">There is no lock</string>
+    <string name="connect_to_internet">Connect to Internet</string>
+    <string name="esp_get_networks">networks</string>
 
 </resources>
 

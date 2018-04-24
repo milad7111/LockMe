@@ -18,8 +18,11 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
+import com.backendless.Subscription;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
+import com.backendless.messaging.Message;
+import com.backendless.messaging.SubscriptionOptions;
 import com.backendless.persistence.DataQueryBuilder;
 
 import java.util.List;
@@ -55,7 +58,7 @@ public class LockActivity extends AppCompatActivity {
         queryBuilder.setRelationsDepth(2);
         StringBuilder mWhereClause = new StringBuilder();
         mWhereClause.append("user");
-        mWhereClause.append(".objectId=\'").append(mCurrentUser.getObjectId()).append("\'");
+        mWhereClause.append(".objectId=\'").append(mCurrentUser != null ? mCurrentUser.getObjectId() : null).append("\'");
         queryBuilder.setWhereClause(String.valueOf(mWhereClause));
         Backendless.Data.of("user_lock").find(queryBuilder, new AsyncCallback<List<Map>>() {
             public void handleResponse(List<Map> maps) {
@@ -71,6 +74,8 @@ public class LockActivity extends AppCompatActivity {
                 Log.e(backendlessFault.getCode(), backendlessFault.getMessage());
                 if (Defaults.hasAdminLock(getBaseContext()))
                     LoadFragment(new LockListFragment(), getString(R.string.fragment_lock_list_fragment));
+                else
+                    LoadFragment(new NoLockFragment(), getString(R.string.fragment_no_lock_fragment));
             }
         });
     }
@@ -81,7 +86,7 @@ public class LockActivity extends AppCompatActivity {
         StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Listener() {
             @Override
             public void onResponse(Object response) {
-                Toast.makeText(getBaseContext(), response.toString(), Toast.LENGTH_LONG).show();
+                Log.i(tag, response.toString());
                 Bundle mLockInfoFragmentBundle = new Bundle();
                 mLockInfoFragmentBundle.putString("SerialNumber", serialnumber);
                 LockInfoFragment mLockInfoFragment = new LockInfoFragment();
@@ -94,6 +99,30 @@ public class LockActivity extends AppCompatActivity {
             }
         });
         MyRequestQueue.add(MyStringRequest);
+    }
+
+    private void setAppSubscriber(){
+        SubscriptionOptions mSubscriptionOptions = new SubscriptionOptions();
+        mSubscriptionOptions.setSubtopic("change_lock_status.1300.user_id");
+        Backendless.Messaging.subscribe("channel200", new AsyncCallback<List<Message>>() {
+            public void handleResponse(List<Message> response) {
+                Message message = response.get(0);
+//                if (message.getData().equals("done"))
+//                    _img_lock_status.setImageResource(R.drawable.img_open_door);
+            }
+
+            public void handleFault(BackendlessFault fault) {
+                Log.e(this.getClass().getName(), fault.getMessage());
+            }
+        }, mSubscriptionOptions, new AsyncCallback<Subscription>() {
+            public void handleResponse(Subscription response) {
+                Log.e(this.getClass().getName(), response.toString());
+            }
+
+            public void handleFault(BackendlessFault fault) {
+                Log.e(this.getClass().getName(), fault.getMessage());
+            }
+        });
     }
 }
 
