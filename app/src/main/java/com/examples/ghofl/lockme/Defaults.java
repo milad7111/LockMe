@@ -7,8 +7,14 @@ package com.examples.ghofl.lockme;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -23,6 +29,9 @@ import com.backendless.exceptions.BackendlessFault;
 import com.backendless.persistence.DataQueryBuilder;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -31,6 +40,8 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import static android.content.Context.CONNECTIVITY_SERVICE;
 
 public class Defaults {
     private Boolean internet_connectivity = Boolean.valueOf(false);
@@ -281,8 +292,37 @@ public class Defaults {
         return false;
     }
 
-    public void checkConnectionToInternet(Context context, final String tag, final String serialnumber) {
+    public static void setMobileDataEnabled(Context context, boolean enabled) {
+        try {
+            TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+            Method methodSet = Class.forName(tm.getClass().getName()).getDeclaredMethod("setDataEnabled", Boolean.TYPE);
+            methodSet.invoke(tm, enabled);
+        } catch (Exception e) {
+            Log.e("Defaults", e.toString());
+        }
+    }
 
+    public static void setWifiEnabled(Context context, boolean enabled) {
+        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        wifiManager.setWifiEnabled(enabled);
+    }
+
+    public static Boolean checkMobileDataOrWifiEnabled(Context context, int choice) {
+        NetworkInfo activeNetwork = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+
+        if (activeNetwork != null && activeNetwork.isConnectedOrConnecting()) {
+            if (choice == ConnectivityManager.TYPE_MOBILE && activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE)
+                return true;
+            else if (choice == ConnectivityManager.TYPE_WIFI && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI)
+                return true;
+        }
+
+        return false;
+    }
+
+    public static Boolean checkAirPlaneMode(Context context) {
+        return Settings.System.getInt(context.getContentResolver(),
+                Settings.System.AIRPLANE_MODE_ON, 0) != 0;
     }
 }
 
