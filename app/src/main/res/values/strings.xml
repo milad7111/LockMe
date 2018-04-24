@@ -97,6 +97,9 @@
     <string name="dialog_button_data">Mobile Data</string>
     <string name="dialog_button_wifi_network">Wifi</string>
     <string name="dialog_choose_how_to_connect_internet">Choose how to connect to internet.</string>
+    <string name="there_is_no_lock">There is no lock</string>
+    <string name="connect_to_internet">Connect to Internet</string>
+    <string name="esp_get_networks">networks</string>
 
 </resources>
 
