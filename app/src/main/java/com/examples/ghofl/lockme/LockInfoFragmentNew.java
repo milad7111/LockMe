@@ -44,6 +44,7 @@ public class LockInfoFragmentNew extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.layout_fragment_lock_info_new, container, false);
 
+        //defining views
         _img_battery_status = rootView.findViewById(R.id.img_battery_status);
         _img_connection_status = rootView.findViewById(R.id.img_connection_status);
         _img_wifi_status = rootView.findViewById(R.id.img_wifi_status);
@@ -51,11 +52,10 @@ public class LockInfoFragmentNew extends Fragment {
         _img_lock_status_new = rootView.findViewById(R.id.img_lock_status_new);
         _txv_lock_status = rootView.findViewById(R.id.txv_lock_status);
 
-
-
         _img_door_status_new = rootView.findViewById(R.id.img_door_status_new);
         _txv_door_status = rootView.findViewById(R.id.txv_door_status);
 
+        //setting initial values.
         JSONObject mLockObject = Defaults.getLockFromLocalWithSerialNumber(getActivity(), mLockSerialNumber);
 
         if (mLockObject != null) {
@@ -87,7 +87,7 @@ public class LockInfoFragmentNew extends Fragment {
                         _img_connection_status.setImageResource(R.drawable.ic_cloud_off_black_24dp);
                         _img_connection_status.setColorFilter(Integer.parseInt(getResources().getString(R.color.colorAccent)));
                 }
-                //TO DO: set battery status icon
+                //TODO: set battery status icon
                 Integer battrey_status = 1;
                 switch (battrey_status){
                     case 1:{
@@ -114,7 +114,7 @@ public class LockInfoFragmentNew extends Fragment {
                     default:
                 }
 
-                //TO DO: set wifi status icon
+                //TODO: set wifi status icon
                 Integer wifi_status = 1;
                 switch (battrey_status){
                     case 1:{
@@ -146,6 +146,7 @@ public class LockInfoFragmentNew extends Fragment {
             }
         }
 
+        //handle lock open or close command, later its need animation.
         _img_lock_status_new.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
