@@ -7,6 +7,7 @@ import android.net.ConnectivityManager;
 import android.net.wifi.WifiConfiguration;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
@@ -14,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -26,8 +28,10 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.backendless.Backendless;
+import com.backendless.Subscription;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
+import com.backendless.messaging.Message;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -45,17 +49,11 @@ public class LoginFragment extends Fragment {
     private String mail;
     private String password;
 
-    private AlertDialog.Builder builder;
-    private AlertDialog dialogView;
-
-    private Boolean wantToCloseDialog;
-
     public LoginFragment() {
     }
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        wantToCloseDialog = false;
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -97,6 +95,7 @@ public class LoginFragment extends Fragment {
                                     Defaults.setValueInSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_password),
                                             getString(R.string.empty_phrase));
 
+
                                 ((MainActivity) getActivity()).comeFromLogin();
                             }
 
@@ -105,7 +104,24 @@ public class LoginFragment extends Fragment {
                                 _prg_login.setVisibility(View.INVISIBLE);
                                 Log.e(getTag(), fault.getMessage());
 
-                                requestConnectToNetworkOrDataMobile();
+                                if (fault.getCode().equals("3003") || fault.getCode().equals("IllegalArgumentException")) {
+
+                                    View view = getActivity().getCurrentFocus();
+                                    if (view != null) {
+                                        InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                                    }
+
+                                    final Snackbar mBackendlessErrorSnackBar = Snackbar.make(getView(),
+                                            fault.getMessage(), Snackbar.LENGTH_INDEFINITE);
+                                    mBackendlessErrorSnackBar.setAction(R.string.dialog_button_confirm, new OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            mBackendlessErrorSnackBar.dismiss();
+                                        }
+                                    }).show();
+                                } else
+                                    requestConnectToNetworkOrDataMobile();
                             }
                         });
             }

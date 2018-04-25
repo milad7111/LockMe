@@ -67,8 +67,7 @@ public class LockInfoFragment extends Fragment {
             mLockObject.append("serial_number");
             mLockObject.append(".result = \'").append(mLockSerialNumber).append("\'");
             ((LockActivity) getActivity()).queryBuilder.setWhereClause(String.valueOf(mLockObject));
-            Backendless.Data.of("lock").find(((LockActivity) getActivity()).queryBuilder,
-                    new AsyncCallback<List<Map>>() {
+            Backendless.Data.of("lock").find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Map>>() {
                 public void handleResponse(List<Map> maps) {
                     if (maps.size() != 0) {
                         if (Defaults.getLockStatus(maps.get(0))) {
@@ -88,32 +87,32 @@ public class LockInfoFragment extends Fragment {
                     }
                 }
 
-            public void handleFault(BackendlessFault backendlessFault) {
-                Log.e(getTag(), backendlessFault.getMessage());
+                public void handleFault(BackendlessFault backendlessFault) {
+                    Log.e(getTag(), backendlessFault.getMessage());
 
-                JSONObject mLockObject = Defaults.getLockFromLocalWithSerialNumber(getActivity(), mLockSerialNumber);
+                    JSONObject mLockObject = Defaults.getLockFromLocalWithSerialNumber(getActivity(), mLockSerialNumber);
 
-                if (mLockObject != null) {
-                    try {
-                        if (mLockObject.getBoolean("lock_status")) {
-                            _img_lock_status.setImageResource(R.drawable.img_close_lock);
-                        } else {
-                            _img_lock_status.setImageResource(R.drawable.img_open_lock);
+                    if (mLockObject != null) {
+                        try {
+                            if (mLockObject.getBoolean("lock_status")) {
+                                _img_lock_status.setImageResource(R.drawable.img_close_lock);
+                            } else {
+                                _img_lock_status.setImageResource(R.drawable.img_open_lock);
+                            }
+
+                            if (mLockObject.getBoolean("door_status")) {
+                                _img_door_status.setImageResource(R.drawable.img_close_door);
+                            } else {
+                                _img_door_status.setImageResource(R.drawable.img_open_door);
+                            }
+
+                            _prg_load_lock_door_status.setVisibility(View.GONE);
+                            _lnrl_lock_door_status.setVisibility(View.VISIBLE);
+                        } catch (JSONException e) {
+                            Log.e(getTag(), e.getMessage());
                         }
-
-                        if (mLockObject.getBoolean("door_status")) {
-                            _img_door_status.setImageResource(R.drawable.img_close_door);
-                        } else {
-                            _img_door_status.setImageResource(R.drawable.img_open_door);
-                        }
-
-                        _prg_load_lock_door_status.setVisibility(View.GONE);
-                        _lnrl_lock_door_status.setVisibility(View.VISIBLE);
-                    } catch (JSONException e) {
-                        Log.e(getTag(), e.getMessage());
                     }
                 }
-            }
             });
         }
 
@@ -126,22 +125,23 @@ public class LockInfoFragment extends Fragment {
                         Log.i(getTag(), messageStatus.toString());
                     }
 
-                public void handleFault(BackendlessFault backendlessFault) {
-                    Log.e(getTag(), backendlessFault.getMessage());
+                    public void handleFault(BackendlessFault backendlessFault) {
+                        Log.e(getTag(), backendlessFault.getMessage());
 
-                    final Snackbar mbackendlessFaultSnackBar = Snackbar.make(getView(),
-                            backendlessFault.getMessage(), Snackbar.LENGTH_INDEFINITE);
+                        final Snackbar mbackendlessFaultSnackBar = Snackbar.make(getView(),
+                                backendlessFault.getMessage(), Snackbar.LENGTH_INDEFINITE);
 
-                    mbackendlessFaultSnackBar.setAction(R.string.dialog_button_confirm, new OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            mbackendlessFaultSnackBar.dismiss();
-                        }
-                    }).show();
-                }
+                        mbackendlessFaultSnackBar.setAction(R.string.dialog_button_confirm, new OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                mbackendlessFaultSnackBar.dismiss();
+                            }
+                        }).show();
+                    }
                 });
             }
         });
+
         return rootView;
     }
 

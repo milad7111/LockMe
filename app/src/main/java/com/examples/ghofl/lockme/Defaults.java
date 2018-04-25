@@ -230,8 +230,8 @@ public class Defaults {
                     return mLockObject;
                 }
             }
-        } catch (JSONException var5) {
-            Log.e("Defaults", var5.getMessage());
+        } catch (JSONException e) {
+            Log.e("Defaults", e.getMessage());
         }
 
         return null;

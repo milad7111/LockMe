@@ -92,7 +92,6 @@ public class LockListFragment extends Fragment {
     }
 
     private void getAllSavedLock() {
-        new Defaults();
         if (Defaults.checkInternet().booleanValue()) {
             ((LockActivity) getActivity()).queryBuilder = DataQueryBuilder.create();
             ((LockActivity) getActivity()).queryBuilder.setRelationsDepth(Integer.valueOf(2));
