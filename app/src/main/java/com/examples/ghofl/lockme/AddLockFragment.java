@@ -320,7 +320,7 @@ public class AddLockFragment extends Fragment {
     private void goToLockInfo() {
         Bundle mLockInfoFragmentBundle = new Bundle();
         mLockInfoFragmentBundle.putString("SerialNumber", mLockSerialNumber);
-        LockInfoFragment mLockInfoFragment = new LockInfoFragment();
+        LockInfoFragment2 mLockInfoFragment = new LockInfoFragment2();
         mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
         ((LockActivity) getActivity()).LoadFragment(mLockInfoFragment, getString(R.string.fragment_lock_info_fragment));
     }

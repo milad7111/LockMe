@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -92,7 +91,7 @@ public class LockActivity extends AppCompatActivity {
                 Log.i(tag, response.toString());
                 Bundle mLockInfoFragmentBundle = new Bundle();
                 mLockInfoFragmentBundle.putString("SerialNumber", serialnumber);
-                LockInfoFragment mLockInfoFragment = new LockInfoFragment();
+                LockInfoFragment2 mLockInfoFragment = new LockInfoFragment2();
                 mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
                 LoadFragment(mLockInfoFragment, getString(R.string.fragment_lock_info_fragment));
             }

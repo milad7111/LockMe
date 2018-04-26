@@ -13,7 +13,6 @@ import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.AdapterView.OnItemClickListener;
@@ -143,7 +142,7 @@ public class LockListFragment extends Fragment {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Bundle mLockInfoFragmentBundle = new Bundle();
                 mLockInfoFragmentBundle.putString("SerialNumber", (String) mSerialNumbers.get(i));
-                LockInfoFragment mLockInfoFragment = new LockInfoFragment();
+                LockInfoFragment2 mLockInfoFragment = new LockInfoFragment2();
                 mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
                 ((LockActivity) getActivity()).LoadFragment(mLockInfoFragment, getString(R.string.fragment_lock_info_fragment));
             }
@@ -173,7 +172,7 @@ public class LockListFragment extends Fragment {
                 public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                     Bundle mLockInfoFragmentBundle = new Bundle();
                     mLockInfoFragmentBundle.putString("SerialNumber", mSerialNumbers.get(i));
-                    LockInfoFragment mLockInfoFragment = new LockInfoFragment();
+                    LockInfoFragment2 mLockInfoFragment = new LockInfoFragment2();
                     mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
                     ((LockActivity) getActivity()).LoadFragment(mLockInfoFragment, getString(R.string.fragment_lock_info_fragment));
                 }

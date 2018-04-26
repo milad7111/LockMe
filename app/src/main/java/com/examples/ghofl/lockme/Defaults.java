@@ -48,71 +48,97 @@ public class Defaults {
     public static final String APPLICATION_ID = "43F16378-A01D-6283-FFE2-EBA6CE6C6300";
     public static final String API_KEY = "A9F660C9-F062-D314-FF04-9E8DF5931E00";
     public static final String SERVER_URL = "https://api.backendless.com";
+
     public static final String TABLE_USERS = "users";
-    public static final String TABLE_LOCK = "lock";
-    public static final String TABLE_SERIAL_NUMBER = "serial_number";
-    public static final String TABLE_USER_LOCK = "user_lock";
     public static final String TABLE_USERS_COLUMN_EMAIL = "email";
     public static final String TABLE_USERS_COLUMN_MOBILE_NUMBER = "mobile_number";
     public static final String TABLE_USERS_COLUMN_PASSWORD = "password";
-    public static final String TABLE_LOCK_COLUMN_BATTERY_CHARGE = "battery_charge";
-    public static final String TABLE_LOCK_COLUMN_CONFIGURATION_STATUS = "configuration_status";
+
+    public static final String TABLE_LOCK = "lock";
+    public static final String TABLE_LOCK_COLUMN_BATTERY_STATUS = "battery_charge";
     public static final String TABLE_LOCK_COLUMN_CONNECTION_STATUS = "connection_status";
     public static final String TABLE_LOCK_COLUMN_WIFI_NAME = "wifi_name";
     public static final String TABLE_LOCK_COLUMN_DOOR_STATUS = "door_status";
     public static final String TABLE_LOCK_COLUMN_LOCK_STATUS = "lock_status";
     public static final String TABLE_LOCK_COLUMN_SERIAL_NUMBER = "serial_number";
-    public static final String TABLE_LOCK_COLUMN_WIFI_STRENGTH = "wifi_strength";
+    public static final String TABLE_LOCK_COLUMN_WIFI_STATUS = "wifi_strength";
+
+    public static final String TABLE_SERIAL_NUMBER = "serial_number";
     public static final String TABLE_SERIAL_NUMBER_COLUMN_CONFIGURATION = "configuration";
     public static final String TABLE_SERIAL_NUMBER_COLUMN_DATE_TIME = "date_time";
     public static final String TABLE_SERIAL_NUMBER_COLUMN_GENERATION = "generation";
     public static final String TABLE_SERIAL_NUMBER_COLUMN_MAC_ADDRESS = "mac_address";
     public static final String TABLE_SERIAL_NUMBER_COLUMN_NUMBER = "number";
-    public static final String TABLE_SERIAL_NUMBER_COLUMN_RESULT = "result";
+    public static final String TABLE_SERIAL_NUMBER_COLUMN_RESULT = "serial_number";
+
+    public static final String TABLE_USER_LOCK = "user_lock";
     public static final String TABLE_USER_LOCK_COLUMN_ADMIN_STATUS = "admin_status";
     public static final String TABLE_USER_LOCK_COLUMN_LOCK = "lock";
     public static final String TABLE_USER_LOCK_COLUMN_NAME = "name";
     public static final String TABLE_USER_LOCK_COLUMN_USER = "user";
+
     public static final String WIFI_PREFIX_NAME = "Lock Wifi";
 
     public Defaults() {
     }
 
-    public static boolean isNetworkAvailable(Context context) {
-        return false;
-    }
-
     public static Boolean getRealLockStatus(Map map) {
         try {
-            JSONObject e = new JSONObject();
-            if ((new JSONObject(map)).get("lock") instanceof JSONObject) {
-                e = new JSONObject((new JSONObject(map)).get("lock").toString());
-            } else if ((new JSONObject(map)).get("lock") instanceof JSONArray) {
-                e = (new JSONArray((new JSONObject(map)).get("lock").toString())).getJSONObject(0);
-            }
+            JSONObject mLockObject = new JSONObject();
+            if ((new JSONObject(map)).get("lock") instanceof JSONObject)
+                mLockObject = new JSONObject((new JSONObject(map)).get("lock").toString());
+            else if ((new JSONObject(map)).get("lock") instanceof JSONArray)
+                mLockObject = (new JSONArray((new JSONObject(map)).get("lock").toString())).getJSONObject(0);
 
-            return Boolean.valueOf(e.getBoolean("lock_status") && e.getBoolean("door_status"));
-        } catch (JSONException var2) {
-            var2.printStackTrace();
+            return Boolean.valueOf(mLockObject.getBoolean("lock_status") && mLockObject.getBoolean("door_status"));
+        } catch (JSONException e) {
+            Log.e("Defaults", e.getMessage());
             return null;
         }
     }
 
     public static Boolean getLockStatus(Map map) {
         try {
-            return Boolean.valueOf((new JSONObject(map)).getBoolean("lock_status"));
-        } catch (JSONException var2) {
-            Log.e("Defaults", var2.getMessage());
+            return Boolean.valueOf((new JSONObject(map)).getBoolean(TABLE_LOCK_COLUMN_LOCK_STATUS));
+        } catch (JSONException e) {
+            Log.e("Defaults", e.getMessage());
             return null;
         }
     }
 
     public static Boolean getDoorStatus(Map map) {
         try {
-            return Boolean.valueOf((new JSONObject(map)).getBoolean("door_status"));
-        } catch (JSONException var2) {
-            var2.printStackTrace();
+            return Boolean.valueOf((new JSONObject(map)).getBoolean(TABLE_LOCK_COLUMN_DOOR_STATUS));
+        } catch (JSONException e) {
+            Log.e("Defaults", e.getMessage());
             return null;
+        }
+    }
+
+    public static Boolean getConnectionStatus(Map map) {
+        try {
+            return Boolean.valueOf((new JSONObject(map)).getBoolean(TABLE_LOCK_COLUMN_CONNECTION_STATUS));
+        } catch (JSONException e) {
+            Log.e("Defaults", e.getMessage());
+            return null;
+        }
+    }
+
+    public static int getBatteryStatus(Map map) {
+        try {
+            return ((new JSONObject(map)).getInt(TABLE_LOCK_COLUMN_BATTERY_STATUS));
+        } catch (JSONException e) {
+            Log.e("Defaults", e.getMessage());
+            return -1;
+        }
+    }
+
+    public static int getWifiStatus(Map map) {
+        try {
+            return ((new JSONObject(map)).getInt(TABLE_LOCK_COLUMN_WIFI_STATUS));
+        } catch (JSONException e) {
+            Log.e("Defaults", e.getMessage());
+            return -1;
         }
     }
 
