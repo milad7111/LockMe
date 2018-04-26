@@ -101,9 +101,9 @@ public class LockListFragment extends Fragment {
             ((LockActivity) getActivity()).queryBuilder.setWhereClause(String.valueOf(mWhereClause));
             Backendless.Data.of("user_lock").find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Map>>() {
                 public void handleResponse(List<Map> maps) {
-                    if (maps.size() == 0) {
-                        ((LockActivity) getActivity()).LoadFragment(new NoLockFragment(), getString(R.string.fragment_no_lock_fragment));
-                    } else {
+                    if (maps.size() == 0)
+                        showLocalLocks(Defaults.getLockFromLocal(getActivity().getBaseContext()));
+                    else {
                         showServerLocks(maps);
                         fab.setVisibility(View.VISIBLE);
                     }

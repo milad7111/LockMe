@@ -190,7 +190,7 @@ public class AddLockFragment extends Fragment {
                             }
                         }
 
-                        if (wantToCloseDialog.booleanValue()) {
+                        if (wantToCloseDialog) {
                             checkConnectionToESP8266();
                             dialogView.dismiss();
                         }

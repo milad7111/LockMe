@@ -108,7 +108,7 @@ public class LoginFragment extends Fragment {
 
                                     View view = getActivity().getCurrentFocus();
                                     if (view != null) {
-                                        InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                                        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                                         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
                                     }
 
@@ -175,7 +175,7 @@ public class LoginFragment extends Fragment {
                     _btn_skip_login.setVisibility(View.VISIBLE);
                 else
                     _btn_skip_login.setVisibility(View.INVISIBLE);
-                Log.e(getTag(), error.getMessage());
+                Log.e(getTag(), error.toString());
             }
         });
         MyRequestQueue.add(MyStringRequest);
