@@ -324,5 +324,23 @@ public class Defaults {
         return Settings.System.getInt(context.getContentResolver(),
                 Settings.System.AIRPLANE_MODE_ON, 0) != 0;
     }
+
+    public static ArrayList<String> parseESPAvailableNetworksResponse(String response) {
+        try {
+            JSONObject mResponse = new JSONObject(response);
+
+            JSONArray mResponseNetworksSSIDJSONArray = mResponse.getJSONArray("networksSSID");
+            ArrayList<String> mNetworksSSIDArrayList = new ArrayList<>();
+            for (int i = 0; i < mResponseNetworksSSIDJSONArray.length(); i++)
+                mNetworksSSIDArrayList.add(mResponseNetworksSSIDJSONArray.get(i).toString());
+
+            return mNetworksSSIDArrayList;
+
+        } catch (JSONException e) {
+            Log.e("Defaults", e.getMessage());
+
+            return new ArrayList<>();
+        }
+    }
 }
 

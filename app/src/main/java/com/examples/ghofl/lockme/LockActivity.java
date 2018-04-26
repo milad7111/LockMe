@@ -62,9 +62,12 @@ public class LockActivity extends AppCompatActivity {
         queryBuilder.setWhereClause(String.valueOf(mWhereClause));
         Backendless.Data.of("user_lock").find(queryBuilder, new AsyncCallback<List<Map>>() {
             public void handleResponse(List<Map> maps) {
-                if (maps.size() == 0)
-                    LoadFragment(new NoLockFragment(), getString(R.string.fragment_no_lock_fragment));
-                else {
+                if (maps.size() == 0) {
+                    if (Defaults.hasAdminLock(getBaseContext()))
+                        LoadFragment(new LockListFragment(), getString(R.string.fragment_lock_list_fragment));
+                    else
+                        LoadFragment(new NoLockFragment(), getString(R.string.fragment_no_lock_fragment));
+                } else {
                     mResponseListMap = maps;
                     LoadFragment(new LockListFragment(), getString(R.string.fragment_lock_list_fragment));
                 }
@@ -101,7 +104,7 @@ public class LockActivity extends AppCompatActivity {
         MyRequestQueue.add(MyStringRequest);
     }
 
-    private void setAppSubscriber(){
+    private void setAppSubscriber() {
         SubscriptionOptions mSubscriptionOptions = new SubscriptionOptions();
         mSubscriptionOptions.setSubtopic("change_lock_status.1300.user_id");
         Backendless.Messaging.subscribe("channel200", new AsyncCallback<List<Message>>() {
