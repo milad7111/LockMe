@@ -235,7 +235,7 @@ public class AddLockFragment extends Fragment {
         try {
             mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, mLockSerialNumber);
             mUniqueLock.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME, mLockName);
-            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_WIFI_NAME, mLockWifiName);
+            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID, mLockWifiName);
             mUniqueLock.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, true);
             mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS, true);
             mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS, true);

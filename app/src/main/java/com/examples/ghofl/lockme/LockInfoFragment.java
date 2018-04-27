@@ -94,7 +94,7 @@ public class LockInfoFragment extends Fragment {
                 });
             }
         });
-        //region event image lock status click
+        //endregion event image lock status click
 
         return rootView;
     }
@@ -219,7 +219,7 @@ public class LockInfoFragment extends Fragment {
 
     private void updateImageResourceAndTexts() {
         if (getArguments() != null) {
-            mLockSerialNumber = getArguments().getString("SerialNumber");
+            mLockSerialNumber = getArguments().getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER);
 
             //region read status from local
             JSONObject mLockObjectJSONObject = Utilities.getLockFromLocalWithSerialNumber(getActivity(), mLockSerialNumber);

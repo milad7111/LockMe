@@ -69,6 +69,9 @@ public class LoginFragment extends Fragment {
                             @Override
                             public void handleResponse(Object response) {
                                 _prg_login.setVisibility(View.INVISIBLE);
+
+                                Utilities.syncDataBetweenLocalAndServer(getActivity().getBaseContext());
+
                                 Utilities.setValueInSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_mail),
                                         _edt_mail.getText().toString());
 

@@ -61,6 +61,8 @@ public class LockListFragment extends Fragment {
             });
         }
 
+        Utilities.syncDataBetweenLocalAndServer(getActivity().getBaseContext());
+
         return rootView;
     }
 
