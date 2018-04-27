@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.List;
@@ -33,7 +34,13 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
     @Override
     public void onBindViewHolder(LockListAdapter.ViewHolder holder, int position) {
         String lockName = mData.get(position);
-        holder.myTextView.setText(lockName);
+
+        //TODO: modify mData type and input, so make view valid.
+        holder._img_connection_status_list.setImageResource(Integer.parseInt(mData.get(position)));
+        holder._txv_lock_name.setText(lockName);
+        holder._txv_is_admin.setText(mData.get(position));
+        holder._img_lock_status_list.setImageResource(Integer.parseInt(mData.get(position)));
+
     }
 
     @Override
@@ -43,7 +50,12 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
 
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView myTextView;
+
+        ImageView _img_connection_status_list;
+        TextView _txv_lock_name;
+        TextView _txv_is_admin;
+        ImageView _img_lock_status_list;
+
 
         ViewHolder(View itemView) {
             super(itemView);
