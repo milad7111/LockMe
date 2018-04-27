@@ -1,12 +1,15 @@
 package com.examples.ghofl.lockme;
 
+import com.backendless.Backendless;
+import com.backendless.exceptions.BackendlessFault;
+
 /**
  * Created by family on 4/24/2018.
  */
 
-public class Lock {
+public class LockClass {
 
-    Integer mLockID;
+    String mLockID;
     String mSerialNumber;
     Boolean mLockStatus;
     Boolean mDoorStatus;
@@ -15,11 +18,11 @@ public class Lock {
     Integer mWifiStatus;
     Integer mUserID;
 
-    public Integer getLockID() {
+    public String getLockID() {
         return mLockID;
     }
 
-    public void setLockID(Integer mLockID) {
+    public void setLockID(String mLockID) {
         this.mLockID = mLockID;
     }
 
@@ -80,6 +83,4 @@ public class Lock {
     public void setUserID(Integer mUserID) {
         this.mUserID = mUserID;
     }
-
-
 }
