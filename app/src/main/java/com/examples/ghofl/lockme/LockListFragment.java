@@ -13,7 +13,6 @@ import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.AdapterView.OnItemClickListener;
@@ -92,33 +91,30 @@ public class LockListFragment extends Fragment {
     }
 
     private void getAllSavedLock() {
-        if (Defaults.checkInternet().booleanValue()) {
-            ((LockActivity) getActivity()).queryBuilder = DataQueryBuilder.create();
-            ((LockActivity) getActivity()).queryBuilder.setRelationsDepth(Integer.valueOf(2));
-            StringBuilder mWhereClause = new StringBuilder();
-            mWhereClause.append("user");
-            mWhereClause.append(".objectId=\'").append(((LockActivity) getActivity()).mCurrentUser.getObjectId()).append("\'");
-            ((LockActivity) getActivity()).queryBuilder.setWhereClause(String.valueOf(mWhereClause));
-            Backendless.Data.of("user_lock").find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Map>>() {
-                public void handleResponse(List<Map> maps) {
-                    if (maps.size() == 0) {
-                        ((LockActivity) getActivity()).LoadFragment(new NoLockFragment(), getString(R.string.fragment_no_lock_fragment));
-                    } else {
-                        showServerLocks(maps);
-                        fab.setVisibility(View.VISIBLE);
-                    }
+        showLocalLocks(Utilities.getLockFromLocal(getActivity().getBaseContext()));
+        fab.setVisibility(View.VISIBLE);
 
+        ((LockActivity) getActivity()).queryBuilder = DataQueryBuilder.create();
+        ((LockActivity) getActivity()).queryBuilder.setRelationsDepth(Integer.valueOf(2));
+        StringBuilder mWhereClause = new StringBuilder();
+        mWhereClause.append("user");
+        mWhereClause.append(".objectId=\'").append(((LockActivity) getActivity()).mCurrentUser.getObjectId()).append("\'");
+        ((LockActivity) getActivity()).queryBuilder.setWhereClause(String.valueOf(mWhereClause));
+        Backendless.Data.of("user_lock").find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Map>>() {
+            public void handleResponse(List<Map> maps) {
+                if (maps.size() == 0)
+                    showLocalLocks(Utilities.getLockFromLocal(getActivity().getBaseContext()));
+                else {
+                    showServerLocks(maps);
+                    fab.setVisibility(View.VISIBLE);
                 }
 
-                public void handleFault(BackendlessFault backendlessFault) {
-                    Log.e(backendlessFault.getCode(), backendlessFault.getMessage());
-                }
-            });
-        } else {
-            showLocalLocks(Defaults.getLockFromLocal(getActivity().getBaseContext()));
-            fab.setVisibility(View.VISIBLE);
-        }
+            }
 
+            public void handleFault(BackendlessFault backendlessFault) {
+                Log.e(backendlessFault.getCode(), backendlessFault.getMessage());
+            }
+        });
     }
 
     private void showServerLocks(List<Map> locklist) {
@@ -129,8 +125,8 @@ public class LockListFragment extends Fragment {
 
         while (mLockListItterator.hasNext()) {
             Map row = (Map) mLockListItterator.next();
-            mRealLockStatus = Defaults.getRealLockStatus(row);
-            String mSerial = Defaults.getLockSerialNumber(row);
+            mRealLockStatus = Utilities.getRealLockStatus(row);
+            String mSerial = Utilities.getLockSerialNumber(row);
             mSerialNumbers.add(mSerial);
             mLockList.add(String.format("Lock Serial Number: %s\nLock Status: %s", mSerial,
                     mRealLockStatus ? getString(R.string.message_door_is_open) : getString(R.string.message_door_is_locked)));
@@ -159,9 +155,9 @@ public class LockListFragment extends Fragment {
         try {
             while (mLockListItterator.hasNext()) {
                 JSONObject row = (JSONObject) mLockListItterator.next();
-                mRealLockStatus = row.getBoolean("lock_status") && row.getBoolean("door_status");
-                mSerialNumbers.add(row.getString("serial_number"));
-                mLockList.add(String.format("Lock Serial Number: %s\nLock Status: %s", row.getString("serial_number"),
+                mRealLockStatus = row.getBoolean(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS) && row.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS);
+                mSerialNumbers.add(row.getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
+                mLockList.add(String.format("Lock Serial Number: %s\nLock Status: %s", row.getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER),
                         mRealLockStatus ? getString(R.string.message_door_is_open) : getString(R.string.message_door_is_locked)));
             }
 
@@ -172,7 +168,7 @@ public class LockListFragment extends Fragment {
             _lsv_lock_list.setOnItemClickListener(new OnItemClickListener() {
                 public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                     Bundle mLockInfoFragmentBundle = new Bundle();
-                    mLockInfoFragmentBundle.putString("SerialNumber", mSerialNumbers.get(i));
+                    mLockInfoFragmentBundle.putString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, mSerialNumbers.get(i));
                     LockInfoFragment mLockInfoFragment = new LockInfoFragment();
                     mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
                     ((LockActivity) getActivity()).LoadFragment(mLockInfoFragment, getString(R.string.fragment_lock_info_fragment));

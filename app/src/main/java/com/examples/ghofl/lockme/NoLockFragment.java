@@ -79,7 +79,7 @@ public class NoLockFragment extends Fragment {
 
     private void setContentOfTextViewDependsOnInternetConnection() {
         RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
-        String url = getString(R.string.dummy_http_url);
+        String url = getString(R.string.backendless_base_http_url);
         StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
             @Override
             public void onResponse(Object response) {

@@ -1,16 +1,16 @@
 package com.examples.ghofl.lockme;
 
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
@@ -43,16 +43,16 @@ public class RegisterFragment extends Fragment {
 
         _btn_register.setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
-                if (!_edt_register_password.getText().toString().equals(_edt_repeat_password.getText().toString())) {
-                    Toast.makeText(getContext(), R.string.toast_password_not_match, Toast.LENGTH_LONG).show();
-                } else {
+                if (!_edt_register_password.getText().toString().equals(_edt_repeat_password.getText().toString()))
+                    Utilities.showSnackBarMessage(getView(), getString(R.string.toast_password_not_match), Snackbar.LENGTH_LONG);
+                else {
                     BackendlessUser user = new BackendlessUser();
                     user.setEmail(_edt_register_mail.getText().toString());
                     user.setPassword(_edt_register_password.getText().toString());
-                    String mobile_number = _edt_register_mobile_number.getText().toString();
-                    if (!mobile_number.isEmpty()) {
-                        user.setProperty("mobile_number", mobile_number);
-                    }
+
+                    String mMobileNumber = _edt_register_mobile_number.getText().toString();
+                    if (!mMobileNumber.isEmpty())
+                        user.setProperty(Utilities.TABLE_USERS_COLUMN_MOBILE_NUMBER, mMobileNumber);
 
                     _prg_register.setVisibility(View.VISIBLE);
                     Backendless.UserService.register(user, new AsyncCallback() {
@@ -60,8 +60,10 @@ public class RegisterFragment extends Fragment {
                         @Override
                         public void handleResponse(Object response) {
                             _prg_register.setVisibility(View.INVISIBLE);
-                            Toast.makeText(getContext(), R.string.toast_user_registered, Toast.LENGTH_LONG).show();
+
+                            Utilities.showSnackBarMessage(getView(), getString(R.string.toast_user_registered), Snackbar.LENGTH_LONG);
                             ((MainActivity) getActivity()).switchTab(0, _edt_register_mail.getText().toString());
+
                             _edt_register_mail.setText(null);
                             _edt_register_mobile_number.setText(null);
                             _edt_register_password.setText(null);

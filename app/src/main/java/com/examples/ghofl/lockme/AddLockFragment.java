@@ -26,6 +26,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.AdapterView.OnItemClickListener;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -48,7 +49,6 @@ import org.json.JSONObject;
 public class AddLockFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
     private ProgressBar _prg_wifi_lock_list;
-    private static final int CODE = 100;
     private ListView _lsv_lock_wifi;
     private static WifiManager mWifiManager;
     private static WifiReceiver mWifiReceiver;
@@ -190,7 +190,7 @@ public class AddLockFragment extends Fragment {
                             }
                         }
 
-                        if (wantToCloseDialog.booleanValue()) {
+                        if (wantToCloseDialog) {
                             checkConnectionToESP8266();
                             dialogView.dismiss();
                         }
@@ -210,10 +210,11 @@ public class AddLockFragment extends Fragment {
             if (action != null && action.equals("android.net.wifi.SCAN_RESULTS")) {
                 mWifiLockList = mWifiManager.getScanResults();
                 mWifiLockArrayList.clear();
-                ArrayList mSavedWifiNames = Defaults.getSavedLocalWifiNames(getActivity().getBaseContext());
+                ArrayList mSavedWifiNames = Utilities.getSavedLocalWifiNames(getActivity().getBaseContext());
 
                 for (int i = 0; i < mWifiLockList.size(); ++i) {
-                    if ((mWifiLockList.get(i)).SSID.contains("Lock Wifi") && !mSavedWifiNames.contains((mWifiLockList.get(i)).SSID)) {
+                    if ((mWifiLockList.get(i)).SSID.contains(getString(R.string.WIFI_PREFIX_NAME)) &&
+                            !mSavedWifiNames.contains((mWifiLockList.get(i)).SSID)) {
                         mWifiLockArrayList.add((mWifiLockList.get(i)).SSID);
                     }
                 }
@@ -232,20 +233,23 @@ public class AddLockFragment extends Fragment {
         JSONObject mUniqueLock = new JSONObject();
 
         try {
-            mUniqueLock.put("serial_number", mLockSerialNumber);
-            mUniqueLock.put("name", mLockName);
-            mUniqueLock.put("wifi_name", mLockWifiName);
-            mUniqueLock.put("admin_status", true);
-            mUniqueLock.put("lock_status", true);
-            mUniqueLock.put("door_status", true);
-            mUniqueLock.put("saved", saved_on_server);
+            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, mLockSerialNumber);
+            mUniqueLock.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME, mLockName);
+            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_WIFI_NAME, mLockWifiName);
+            mUniqueLock.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, true);
+            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS, true);
+            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS, true);
+            mUniqueLock.put(Utilities.TABLE_USER_LOCK_COLUMN_SAVE_STATUS, saved_on_server);
+            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS, false);
+            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_BATTERY_STATUS, 0);
+            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS, 0);
 
-            Defaults.addUserLockInLocal(getActivity(), mUniqueLock);
-            Defaults.setValueInSharedPreferenceObject(getActivity().getBaseContext(),
+            Utilities.addUserLockInLocal(getActivity(), mUniqueLock);
+            Utilities.setValueInSharedPreferenceObject(getActivity().getBaseContext(),
                     getString(R.string.share_preference_parameter_number_of_admin_lock),
                     String.valueOf(
-                            Integer.parseInt(Defaults.readSharedPreferenceObject(getActivity().getBaseContext(),
-                                    getString(R.string.share_preference_parameter_number_of_admin_lock), "0")) + 1));
+                            Integer.parseInt(Utilities.readSharedPreferenceObject(getActivity().getBaseContext(),
+                                    getString(R.string.share_preference_parameter_number_of_admin_lock), String.valueOf(0))) + 1));
 
             goToLockInfo();
 
@@ -258,27 +262,28 @@ public class AddLockFragment extends Fragment {
         _prg_wifi_lock_list.setVisibility(View.VISIBLE);
 
         RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
-        String url = getString(R.string.esp_http_address);
+        String url = getString(R.string.esp_http_address_check);
         StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
             @Override
             public void onResponse(Object response) {
                 Log.i(getTag(), response.toString());
 
                 StringBuilder mUniqueLock = new StringBuilder();
-                mUniqueLock.append("serial_number");
+                mUniqueLock.append(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER);
                 mUniqueLock.append("=\'").append(mLockSerialNumber).append("\'");
                 ((LockActivity) getActivity()).queryBuilder.setWhereClause(String.valueOf(mUniqueLock));
-                Backendless.Data.of("lock").find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Map>>() {
+                Backendless.Data.of(Utilities.TABLE_LOCK).find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Map>>() {
                     public void handleResponse(List<Map> maps) {
                         if (maps.size() != 0) {
                             HashMap mUserLock = new HashMap();
-                            mUserLock.put("admin_status", true);
-                            mUserLock.put("name", mLockName);
-                            mUserLock.put("lock", maps.get(0));
-                            mUserLock.put("user", Backendless.UserService.CurrentUser());
-                            Backendless.Data.of("user_lock").save(mUserLock, new AsyncCallback<Map>() {
+
+                            mUserLock.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, true);
+                            mUserLock.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME, mLockName);
+                            mUserLock.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK, maps.get(0));
+                            mUserLock.put(Utilities.TABLE_USER_LOCK_COLUMN_USER, Backendless.UserService.CurrentUser());
+
+                            Backendless.Data.of(Utilities.TABLE_USER_LOCK).save(mUserLock, new AsyncCallback<Map>() {
                                 public void handleResponse(Map response) {
-//                                    Defaults.syncUserLockInLocal();
                                     saveLockToLocal(true);
                                     goToLockInfo();
                                 }
@@ -303,23 +308,21 @@ public class AddLockFragment extends Fragment {
                 Log.e(getTag(), error.getMessage());
                 _prg_wifi_lock_list.setVisibility(View.GONE);
 
-                final Snackbar mVolleyErrorSnackBar = Snackbar.make(getView(),
-                        "Wifi strength is low, try again.", Snackbar.LENGTH_INDEFINITE);
-                mVolleyErrorSnackBar.setAction(R.string.dialog_button_confirm, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        mVolleyErrorSnackBar.dismiss();
-                        checkConnectionToESP8266();
-                    }
-                }).show();
+                Utilities.showSnackBarMessage(getView(), getString(R.string.lock_wifi_strength_is_low), Snackbar.LENGTH_INDEFINITE);
             }
         });
+
+        MyStringRequest.setRetryPolicy(new DefaultRetryPolicy(
+                5000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
         MyRequestQueue.add(MyStringRequest);
     }
 
     private void goToLockInfo() {
         Bundle mLockInfoFragmentBundle = new Bundle();
-        mLockInfoFragmentBundle.putString("SerialNumber", mLockSerialNumber);
+        mLockInfoFragmentBundle.putString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, mLockSerialNumber);
         LockInfoFragment mLockInfoFragment = new LockInfoFragment();
         mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
         ((LockActivity) getActivity()).LoadFragment(mLockInfoFragment, getString(R.string.fragment_lock_info_fragment));
