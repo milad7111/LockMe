@@ -5,7 +5,6 @@ import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.net.Uri;
-import android.net.wifi.WifiConfiguration;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
@@ -27,11 +26,8 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 public class ConnectLockToInternetFragment extends Fragment {
@@ -42,14 +38,12 @@ public class ConnectLockToInternetFragment extends Fragment {
     private ArrayAdapter<String> mArrayAdapter;
     private Boolean wantToCloseDialog;
 
-    private WifiConfiguration wifiConfig;
-
     private EditText _edt_lock_password;
     private EditText _edt_lock_name;
 
     private AlertDialog.Builder builder;
     private AlertDialog dialogView;
-    private String mSSID;
+    private String mSSIDForConnectESP8266ToInternet;
 
     public ConnectLockToInternetFragment() {
     }
@@ -91,17 +85,17 @@ public class ConnectLockToInternetFragment extends Fragment {
 
     private void getListOfAvailableNetworks() {
         RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity());
-        String url = getString(R.string.esp_http_address) + getString(R.string.esp_get_networks);
+        String url = getString(R.string.esp_http_address_networks);
         StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Listener() {
             @Override
             public void onResponse(Object response) {
-                mWifiNetworks = Defaults.parseESPAvailableNetworksResponse(response.toString());
-                mArrayAdapter = new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, mWifiNetworks);
                 _lsv_internet_network.setAdapter(null);
+                mWifiNetworks = Utilities.parseESPAvailableNetworksResponse(response.toString());
+                mArrayAdapter = new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, mWifiNetworks);
                 _lsv_internet_network.setAdapter(mArrayAdapter);
                 _lsv_internet_network.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                        mSSID = mWifiNetworks.get(i);
+                        mSSIDForConnectESP8266ToInternet = mWifiNetworks.get(i);
                         builder = (new AlertDialog.Builder(getActivity())).setView(getActivity().getLayoutInflater().inflate(
                                 R.layout.layout_dialog_wifi_password, null)).setNegativeButton(R.string.dialog_button_discard,
                                 new DialogInterface.OnClickListener() {
@@ -123,7 +117,7 @@ public class ConnectLockToInternetFragment extends Fragment {
                             public void onClick(View v) {
                                 wantToCloseDialog = false;
                                 if (!_edt_lock_password.getText().toString().isEmpty()) {
-                                    connectToInternet(mSSID, _edt_lock_password.getText().toString());
+                                    connectToInternet(mSSIDForConnectESP8266ToInternet, _edt_lock_password.getText().toString());
                                     wantToCloseDialog = true;
                                 }
 
@@ -151,17 +145,10 @@ public class ConnectLockToInternetFragment extends Fragment {
 
     private void connectToInternet(final String ssid, final String password) {
         RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity());
-        String url = getString(R.string.esp_http_address) + "connect";
+        String url = getString(R.string.esp_http_address_connect);
         StringRequest MyStringRequest = new StringRequest(Request.Method.POST, url, new Listener() {
             public void onResponse(Object response) {
-                final Snackbar mVolleyResponseSnackBar = Snackbar.make(getView(),
-                        response.toString(), Snackbar.LENGTH_INDEFINITE);
-                mVolleyResponseSnackBar.setAction(R.string.dialog_button_confirm, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        mVolleyResponseSnackBar.dismiss();
-                    }
-                }).show();
+                Utilities.showSnackBarMessage(getView(), response.toString(), Snackbar.LENGTH_INDEFINITE);
             }
         }, new ErrorListener() {
             public void onErrorResponse(VolleyError error) {
@@ -172,8 +159,8 @@ public class ConnectLockToInternetFragment extends Fragment {
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<>();
                 // the POST parameters:
-                params.put("ssid", ssid);
-                params.put("password", password);
+                params.put(Utilities.SSID_FOR_CONNECT_ESP8266_TO_INTERNET, ssid);
+                params.put(Utilities.PASSWORD_FOR_CONNECT_ESP8266_TO_INTERNET, password);
                 return params;
             }
         };

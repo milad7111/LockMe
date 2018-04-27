@@ -75,7 +75,11 @@
     <string name="error_invalid_password">This password is too short</string>
     <string name="error_wifi_initialization">Error in WiFi Initialization!!</string>
     <string name="esp_connect">connect</string>
-    <string name="esp_http_address">http://192.168.4.1/</string>
+    <string name="esp_http_address_pure">http://192.168.4.1/</string>
+    <string name="esp_http_address_check">http://192.168.4.1/check</string>
+    <string name="esp_http_address_connect">http://192.168.4.1/connect</string>
+    <string name="esp_http_address_networks">http://192.168.4.1/networks</string>
+    <string name="esp_http_address_direct">http://192.168.4.1/direct</string>
     <string name="fragment_add_lock_fragment">AddLockFragment</string>
     <string name="fragment_connect_lock_to_internet">ConnectLockToInternetFragment</string>
     <string name="fragment_lock_info_fragment">LockInfoFragment</string>
@@ -116,9 +120,11 @@
     <string name="dialog_choose_how_to_connect_internet">Choose how to connect to internet.</string>
     <string name="there_is_no_lock">There is no lock</string>
     <string name="connect_to_internet">Connect to Internet</string>
-    <string name="esp_get_networks">networks</string>
-    <string name="dummy_http_url">https://api.backendless.com/</string>
+    <string name="backendless_base_http_url">https://api.backendless.com/</string>
     <string name="lock_is_secure">Locked</string>
     <string name="lock_is_not_secure">Opened</string>
+    <string name="lock_wifi_strength_is_low">Lock Wifi strength is low, try again.</string>
+    <string name="direct_command_open">open</string>
+    <string name="direct_command_close">close</string>
 </resources>
 

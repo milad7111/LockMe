@@ -19,10 +19,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private MainActivity.ViewPagerAdapter adapter;
-    private Toolbar toolbar;
-    private TabLayout tabLayout;
-    private ViewPager viewPager;
+    private MainActivity.ViewPagerAdapter mAdapter;
+    private Toolbar mToolbar;
+    private TabLayout mTabLayout;
+    private ViewPager mViewPager;
 
     public MainActivity() {
     }
@@ -30,35 +30,38 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.layout_activity_main);
-        Backendless.setUrl("https://api.backendless.com");
-        Backendless.initApp(this.getApplicationContext(), "43F16378-A01D-6283-FFE2-EBA6CE6C6300", "A9F660C9-F062-D314-FF04-9E8DF5931E00");
-        toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        Backendless.setUrl(Utilities.SERVER_URL);
+        Backendless.initApp(this.getApplicationContext(), Utilities.APPLICATION_ID, Utilities.SECRET_KEY);
+        mToolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        viewPager = findViewById(R.id.viewpager);
-        setupViewPager(viewPager);
-        tabLayout = findViewById(R.id.tabs);
-        tabLayout.setupWithViewPager(viewPager);
+        mViewPager = findViewById(R.id.viewpager);
+        setupViewPager(mViewPager);
+        mTabLayout = findViewById(R.id.tabs);
+        mTabLayout.setupWithViewPager(mViewPager);
     }
 
     private void setupViewPager(ViewPager viewPager) {
-        adapter = new MainActivity.ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFragment(new LoginFragment(), this.getString(R.string.fragment_login));
-        adapter.addFragment(new RegisterFragment(), this.getString(R.string.fragment_register));
-        viewPager.setAdapter(adapter);
+        mAdapter = new MainActivity.ViewPagerAdapter(getSupportFragmentManager());
+        mAdapter.addFragment(new LoginFragment(), this.getString(R.string.fragment_login));
+        mAdapter.addFragment(new RegisterFragment(), this.getString(R.string.fragment_register));
+        viewPager.setAdapter(mAdapter);
     }
 
     public void switchTab(int index, String mail) {
         EditText _edt_mail = findViewById(R.id.edt_mail);
-        _edt_mail.setText(mail);
         EditText _edt_login_password = findViewById(R.id.edt_login_password);
-        _edt_login_password.setText(null);
         CheckBox _chbx_remember = findViewById(R.id.chbx_remember);
+
+        _edt_mail.setText(mail);
+        _edt_login_password.setText(null);
         _chbx_remember.setChecked(false);
-        Defaults.setValueInSharedPreferenceObject(this, this.getString(R.string.share_preference_parameter_mail), mail);
-        Defaults.setValueInSharedPreferenceObject(this, this.getString(R.string.share_preference_parameter_password), this.getString(R.string.empty_phrase));
-        Tab tab = tabLayout.getTabAt(index);
-        tab.select();
+
+        Utilities.setValueInSharedPreferenceObject(this, Utilities.TABLE_USERS_COLUMN_EMAIL, mail);
+        Utilities.setValueInSharedPreferenceObject(this, Utilities.TABLE_USERS_COLUMN_PASSWORD, getString(R.string.empty_phrase));
+
+        Tab mTab = mTabLayout.getTabAt(index);
+        mTab.select();
     }
 
     public void comeFromLogin() {

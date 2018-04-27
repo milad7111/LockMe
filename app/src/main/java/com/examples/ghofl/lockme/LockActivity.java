@@ -56,13 +56,13 @@ public class LockActivity extends AppCompatActivity {
         queryBuilder = DataQueryBuilder.create();
         queryBuilder.setRelationsDepth(2);
         StringBuilder mWhereClause = new StringBuilder();
-        mWhereClause.append("user");
+        mWhereClause.append(Utilities.TABLE_USER_LOCK_COLUMN_USER);
         mWhereClause.append(".objectId=\'").append(mCurrentUser != null ? mCurrentUser.getObjectId() : null).append("\'");
         queryBuilder.setWhereClause(String.valueOf(mWhereClause));
-        Backendless.Data.of("user_lock").find(queryBuilder, new AsyncCallback<List<Map>>() {
+        Backendless.Data.of(Utilities.TABLE_USER_LOCK).find(queryBuilder, new AsyncCallback<List<Map>>() {
             public void handleResponse(List<Map> maps) {
                 if (maps.size() == 0) {
-                    if (Defaults.hasAdminLock(getBaseContext()))
+                    if (Utilities.hasAdminLock(getBaseContext()))
                         LoadFragment(new LockListFragment(), getString(R.string.fragment_lock_list_fragment));
                     else
                         LoadFragment(new NoLockFragment(), getString(R.string.fragment_no_lock_fragment));
@@ -74,7 +74,7 @@ public class LockActivity extends AppCompatActivity {
 
             public void handleFault(BackendlessFault backendlessFault) {
                 Log.e(backendlessFault.getCode(), backendlessFault.getMessage());
-                if (Defaults.hasAdminLock(getBaseContext()))
+                if (Utilities.hasAdminLock(getBaseContext()))
                     LoadFragment(new LockListFragment(), getString(R.string.fragment_lock_list_fragment));
                 else
                     LoadFragment(new NoLockFragment(), getString(R.string.fragment_no_lock_fragment));
@@ -84,14 +84,14 @@ public class LockActivity extends AppCompatActivity {
 
     public void checkConnectionToESP8266(final String tag, final String serialnumber) {
         RequestQueue MyRequestQueue = Volley.newRequestQueue(this);
-        String url = getString(R.string.esp_http_address);
+        String url = getString(R.string.esp_http_address_pure);
         StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Listener() {
             @Override
             public void onResponse(Object response) {
                 Log.i(tag, response.toString());
                 Bundle mLockInfoFragmentBundle = new Bundle();
-                mLockInfoFragmentBundle.putString("SerialNumber", serialnumber);
-                LockInfoFragment2 mLockInfoFragment = new LockInfoFragment2();
+                mLockInfoFragmentBundle.putString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, serialnumber);
+                LockInfoFragment mLockInfoFragment = new LockInfoFragment();
                 mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
                 LoadFragment(mLockInfoFragment, getString(R.string.fragment_lock_info_fragment));
             }

@@ -40,7 +40,6 @@ public class LockInfoFragment extends Fragment {
     private ImageView _img_door_status;
     private TextView _txv_door_status;
 
-
     private String mLockSerialNumber;
 
     public LockInfoFragment() {
@@ -50,7 +49,6 @@ public class LockInfoFragment extends Fragment {
         super.onCreate(savedInstanceState);
     }
 
-    @SuppressLint("ResourceType")
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.layout_fragment_lock_info, container, false);
 
@@ -82,7 +80,8 @@ public class LockInfoFragment extends Fragment {
             public void onClick(View v) {
                 PublishOptions mPublishOptions = new PublishOptions();
                 mPublishOptions.setSubtopic("change_lock_status.1200.user_id");
-                Backendless.Messaging.publish("channel200", "open", mPublishOptions, new AsyncCallback<MessageStatus>() {
+                Backendless.Messaging.publish("channel200", getString(R.string.direct_command_open),
+                        mPublishOptions, new AsyncCallback<MessageStatus>() {
                     public void handleResponse(MessageStatus messageStatus) {
                         Log.i(getTag(), messageStatus.toString());
                     }
@@ -90,15 +89,7 @@ public class LockInfoFragment extends Fragment {
                     public void handleFault(BackendlessFault backendlessFault) {
                         Log.e(getTag(), backendlessFault.getMessage());
 
-                        final Snackbar mbackendlessFaultSnackBar = Snackbar.make(getView(),
-                                backendlessFault.getMessage(), Snackbar.LENGTH_INDEFINITE);
-
-                        mbackendlessFaultSnackBar.setAction(R.string.dialog_button_confirm, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                mbackendlessFaultSnackBar.dismiss();
-                            }
-                        }).show();
+                        Utilities.showSnackBarMessage(getView(), backendlessFault.getMessage(), Snackbar.LENGTH_INDEFINITE);
                     }
                 });
             }
@@ -231,15 +222,15 @@ public class LockInfoFragment extends Fragment {
             mLockSerialNumber = getArguments().getString("SerialNumber");
 
             //region read status from local
-            JSONObject mLockObjectJSONObject = Defaults.getLockFromLocalWithSerialNumber(getActivity(), mLockSerialNumber);
+            JSONObject mLockObjectJSONObject = Utilities.getLockFromLocalWithSerialNumber(getActivity(), mLockSerialNumber);
 
             if (mLockObjectJSONObject != null)
                 try {
-                    changeLockStatusInView(mLockObjectJSONObject.getBoolean(Defaults.TABLE_LOCK_COLUMN_LOCK_STATUS));
-                    changeDoorStatusInView(mLockObjectJSONObject.getBoolean(Defaults.TABLE_LOCK_COLUMN_DOOR_STATUS));
-                    changeConnectionStatusInView(mLockObjectJSONObject.getBoolean(Defaults.TABLE_LOCK_COLUMN_CONNECTION_STATUS));
-                    changeBatteryStatusInView(mLockObjectJSONObject.getInt(Defaults.TABLE_LOCK_COLUMN_BATTERY_STATUS));
-                    changeWifiStatusInView(mLockObjectJSONObject.getInt(Defaults.TABLE_LOCK_COLUMN_WIFI_STATUS));
+                    changeLockStatusInView(mLockObjectJSONObject.getBoolean(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS));
+                    changeDoorStatusInView(mLockObjectJSONObject.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS));
+                    changeConnectionStatusInView(mLockObjectJSONObject.getBoolean(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS));
+                    changeBatteryStatusInView(mLockObjectJSONObject.getInt(Utilities.TABLE_LOCK_COLUMN_BATTERY_STATUS));
+                    changeWifiStatusInView(mLockObjectJSONObject.getInt(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS));
                 } catch (JSONException e) {
                     Log.e(getTag(), e.getMessage());
                 }
@@ -247,17 +238,17 @@ public class LockInfoFragment extends Fragment {
 
             //region read status from server
             StringBuilder mLockObjectStringBuilder = new StringBuilder();
-            mLockObjectStringBuilder.append(Defaults.TABLE_LOCK_COLUMN_SERIAL_NUMBER);
-            mLockObjectStringBuilder.append(".").append(Defaults.TABLE_LOCK_COLUMN_SERIAL_NUMBER).append("= \'").append(mLockSerialNumber).append("\'");
+            mLockObjectStringBuilder.append(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER);
+            mLockObjectStringBuilder.append(".").append(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER).append("= \'").append(mLockSerialNumber).append("\'");
             ((LockActivity) getActivity()).queryBuilder.setWhereClause(String.valueOf(mLockObjectStringBuilder));
-            Backendless.Data.of(Defaults.TABLE_LOCK).find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Map>>() {
+            Backendless.Data.of(Utilities.TABLE_LOCK).find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Map>>() {
                 public void handleResponse(List<Map> maps) {
                     if (maps.size() != 0) {
-                        changeLockStatusInView(Defaults.getLockStatus(maps.get(0)));
-                        changeDoorStatusInView(Defaults.getDoorStatus(maps.get(0)));
-                        changeConnectionStatusInView(Defaults.getConnectionStatus(maps.get(0)));
-                        changeBatteryStatusInView(Defaults.getBatteryStatus(maps.get(0)));
-                        changeWifiStatusInView(Defaults.getWifiStatus(maps.get(0)));
+                        changeLockStatusInView(Utilities.getLockStatus(maps.get(0)));
+                        changeDoorStatusInView(Utilities.getDoorStatus(maps.get(0)));
+                        changeConnectionStatusInView(Utilities.getConnectionStatus(maps.get(0)));
+                        changeBatteryStatusInView(Utilities.getBatteryStatus(maps.get(0)));
+                        changeWifiStatusInView(Utilities.getWifiStatus(maps.get(0)));
                     }
                 }
 
