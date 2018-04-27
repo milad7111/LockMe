@@ -68,7 +68,6 @@ public class LockListFragmentNew extends Fragment {
         mLayoutManager = new LinearLayoutManager(getActivity().getBaseContext());
         _rsv_lock_list_new.setLayoutManager(mLayoutManager);
 
-        //TODO: set input.
         mUserLockJsonObjectList =   new ArrayList<>();
         mLockListAdapter = new LockListAdapter(getActivity().getBaseContext(),mUserLockJsonObjectList);
         _rsv_lock_list_new.setAdapter(mLockListAdapter);
@@ -146,25 +145,19 @@ public class LockListFragmentNew extends Fragment {
 
         while (mLockListItterator.hasNext()) {
             Map row = (Map) mLockListItterator.next();
-            mRealLockStatus = Utilities.getRealLockStatus(row);
-            String mSerial = Utilities.getLockSerialNumber(row);
-            mSerialNumbers.add(mSerial);
-            mLockList.add(String.format("Lock Serial Number: %s\nLock Status: %s", mSerial,
-                    mRealLockStatus ? getString(R.string.message_door_is_open) : getString(R.string.message_door_is_locked)));
-        }
-
-        mArrayAdapter = new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, mLockList);
-        _lsv_lock_list.setAdapter(null);
-        _lsv_lock_list.setAdapter(mArrayAdapter);
-        _lsv_lock_list.setOnItemClickListener(new OnItemClickListener() {
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Bundle mLockInfoFragmentBundle = new Bundle();
-                mLockInfoFragmentBundle.putString("SerialNumber", (String) mSerialNumbers.get(i));
-                LockInfoFragment mLockInfoFragment = new LockInfoFragment();
-                mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
-                ((LockActivity) getActivity()).LoadFragment(mLockInfoFragment, getString(R.string.fragment_lock_info_fragment));
+            JSONObject mLockLockObject = new JSONObject();
+            try {
+                mLockLockObject.put(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS,row.get(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS));
+                mLockLockObject.put(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS,row.get(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS));
+                mLockLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME,row.get(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME));
+                mLockLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS,row.get(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS));
+                mLockLockObject.put(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER,row.get(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
+                mUserLockJsonObjectList.add(mLockLockObject);
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-        });
+
+        }
     }
 
     private void showLocalLocks(ArrayList<JSONObject> locklist) {
@@ -173,32 +166,20 @@ public class LockListFragmentNew extends Fragment {
         mSerialNumbers = new ArrayList();
         Iterator mLockListItterator = locklist.iterator();
 
-        try {
             while (mLockListItterator.hasNext()) {
                 JSONObject row = (JSONObject) mLockListItterator.next();
-                mRealLockStatus = row.getBoolean(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS) && row.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS);
-                mSerialNumbers.add(row.getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
-                mLockList.add(String.format("Lock Serial Number: %s\nLock Status: %s", row.getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER),
-                        mRealLockStatus ? getString(R.string.message_door_is_open) : getString(R.string.message_door_is_locked)));
-            }
-
-            mArrayAdapter = new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, mLockList);
-
-            _lsv_lock_list.setAdapter(null);
-            _lsv_lock_list.setAdapter(mArrayAdapter);
-            _lsv_lock_list.setOnItemClickListener(new OnItemClickListener() {
-                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                    Bundle mLockInfoFragmentBundle = new Bundle();
-                    mLockInfoFragmentBundle.putString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, mSerialNumbers.get(i));
-                    LockInfoFragment mLockInfoFragment = new LockInfoFragment();
-                    mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
-                    ((LockActivity) getActivity()).LoadFragment(mLockInfoFragment, getString(R.string.fragment_lock_info_fragment));
+                JSONObject mLockLockObject = new JSONObject();
+                try {
+                    mLockLockObject.put(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS,row.get(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS));
+                    mLockLockObject.put(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS,row.get(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS));
+                    mLockLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME,row.get(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME));
+                    mLockLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS,row.get(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS));
+                    mLockLockObject.put(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER,row.get(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
+                    mUserLockJsonObjectList.add(mLockLockObject);
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            });
-        } catch (JSONException var4) {
-            Log.e(getTag(), var4.getMessage());
-        }
-
+            }
     }
 
     public interface OnFragmentInteractionListener {

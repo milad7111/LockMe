@@ -1,6 +1,8 @@
 package com.examples.ghofl.lockme;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,10 +24,12 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
     private List<JSONObject> mData;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
+    private Context mContext;
 
     LockListAdapter(Context context, List<JSONObject> data) {
         this.mInflater = LayoutInflater.from(context);
         this.mData = data;
+        this.mContext = context;
     }
 
     @Override
@@ -82,6 +86,20 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
         @Override
         public void onClick(View view) {
             if (mClickListener != null) mClickListener.onItemClick(view, getAdapterPosition());
+            try {
+                Bundle mLockInfoFragmentBundle = new Bundle();
+                mLockInfoFragmentBundle.putString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER
+                        ,mData.get(getAdapterPosition()).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
+                LockInfoFragment mLockInfoFragment = new LockInfoFragment();
+                mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
+                ((LockActivity) mContext).LoadFragment(mLockInfoFragment, mContext.getResources().
+                        getString( R.string.fragment_lock_info_fragment));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+
+
         }
     }
 
