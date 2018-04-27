@@ -8,6 +8,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.List;
 
 /**
@@ -16,11 +19,11 @@ import java.util.List;
 
 public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHolder> {
 
-    private List<String> mData;
+    private List<JSONObject> mData;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
 
-    LockListAdapter(Context context, List<String> data) {
+    LockListAdapter(Context context, List<JSONObject> data) {
         this.mInflater = LayoutInflater.from(context);
         this.mData = data;
     }
@@ -33,13 +36,26 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(LockListAdapter.ViewHolder holder, int position) {
-        String lockName = mData.get(position);
+        boolean connection_status = false;
+        boolean lock_status = false;
+        String lock_name = "my_lock";
+        boolean admin_status= true;
+        try {
+            connection_status = mData.get(position).getBoolean(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS);
+            lock_status = mData.get(position).getBoolean(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS);
+            admin_status = mData.get(position).getBoolean(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS);
+            lock_name =  mData.get(position).getString(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME);
+            
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
-        //TODO: modify mData type and input, so make view valid.
-        holder._img_connection_status_list.setImageResource(Integer.parseInt(mData.get(position)));
-        holder._txv_lock_name.setText(lockName);
-        holder._txv_is_admin.setText(mData.get(position));
-        holder._img_lock_status_list.setImageResource(Integer.parseInt(mData.get(position)));
+        holder._img_connection_status_list.setImageResource((connection_status)? R.drawable.ic_cloud_done:R.drawable.ic_cloud_off_black_24dp );
+        holder._img_connection_status_list.setColorFilter((connection_status)? android.R.color.holo_green_dark:android.R.color.holo_red_dark);
+        holder._txv_lock_name.setText(lock_name);
+        holder._txv_is_admin.setText((admin_status)? "you are admin" : "member");
+        holder._img_lock_status_list.setImageResource((lock_status)? R.drawable.img_close_lock:R.drawable.img_open_lock);
+        holder._img_lock_status_list.setColorFilter((lock_status)?android.R.color.holo_green_dark:android.R.color.holo_red_dark);
 
     }
 
@@ -70,7 +86,7 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
     }
 
     // convenience method for getting data at click position
-    String getItem(int id) {
+    JSONObject getItem(int id) {
         return mData.get(id);
     }
 
