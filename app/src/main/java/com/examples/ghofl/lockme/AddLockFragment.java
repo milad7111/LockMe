@@ -262,11 +262,13 @@ public class AddLockFragment extends Fragment {
         _prg_wifi_lock_list.setVisibility(View.VISIBLE);
 
         RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
-        String url = getString(R.string.esp_http_address_check);
+        String url = "http://192.168.4.1";//getString(R.string.esp_http_address_check);
         StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
             @Override
             public void onResponse(Object response) {
                 Log.i(getTag(), response.toString());
+
+                saveLockToLocal(false);
 
                 StringBuilder mUniqueLock = new StringBuilder();
                 mUniqueLock.append(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER);
@@ -284,13 +286,11 @@ public class AddLockFragment extends Fragment {
 
                             Backendless.Data.of(Utilities.TABLE_USER_LOCK).save(mUserLock, new AsyncCallback<Map>() {
                                 public void handleResponse(Map response) {
-                                    saveLockToLocal(true);
-                                    goToLockInfo();
+                                    Utilities.setSaveStatusTrueInLocalForALock(getActivity().getBaseContext(), mLockSerialNumber);
                                 }
 
                                 public void handleFault(BackendlessFault backendlessFault) {
                                     Log.e(getTag(), backendlessFault.getMessage());
-                                    saveLockToLocal(false);
                                 }
                             });
                         }
@@ -299,7 +299,6 @@ public class AddLockFragment extends Fragment {
 
                     public void handleFault(BackendlessFault backendlessFault) {
                         Log.e(getTag(), backendlessFault.getMessage());
-                        saveLockToLocal(false);
                     }
                 });
             }

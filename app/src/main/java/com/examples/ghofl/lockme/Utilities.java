@@ -18,20 +18,16 @@ import android.view.View;
 import com.backendless.Backendless;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
-import com.backendless.persistence.DataQueryBuilder;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import javax.security.auth.login.LoginException;
 
 public class Utilities {
     public static final String APPLICATION_ID = "43F16378-A01D-6283-FFE2-EBA6CE6C6300";
@@ -204,13 +200,13 @@ public class Utilities {
 
     public static JSONObject getLockFromLocalWithSerialNumber(Context context, String serialnumber) {
         try {
-            JSONArray e = new JSONArray(
+            JSONArray mLocalSavedUserLocks = new JSONArray(
                     readSharedPreferenceObject(context, "locks", "").equals("")
                             ? "[]"
                             : readSharedPreferenceObject(context, "locks", ""));
 
-            for (int i = 0; i < e.length(); ++i) {
-                JSONObject mLockObject = new JSONObject(e.get(i).toString());
+            for (int i = 0; i < mLocalSavedUserLocks.length(); ++i) {
+                JSONObject mLockObject = new JSONObject(mLocalSavedUserLocks.get(i).toString());
                 if (mLockObject.get("serial_number").toString().equals(serialnumber)) {
                     return mLockObject;
                 }
@@ -363,7 +359,7 @@ public class Utilities {
                 Log.e("Utilities", response.toString());
 
                 //I assume all user locks saved on server in right way
-                setSaveStatusTrueInLocal(context);
+                setSaveStatusTrueInLocalForAllLocks(context);
             }
 
             @Override
@@ -373,7 +369,7 @@ public class Utilities {
         });
     }
 
-    private static void setSaveStatusTrueInLocal(Context context){
+    private static void setSaveStatusTrueInLocalForAllLocks(Context context) {
         try {
             JSONArray mLocalSavedUserLocks = new JSONArray(
                     readSharedPreferenceObject(context, "locks", "").equals("")
@@ -381,7 +377,26 @@ public class Utilities {
                             : readSharedPreferenceObject(context, "locks", ""));
 
             for (int i = 0; i < mLocalSavedUserLocks.length(); i++)
-               mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, true));
+                mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, true));
+
+            setValueInSharedPreferenceObject(context, "locks", mLocalSavedUserLocks.toString());
+        } catch (JSONException e) {
+            Log.e("Utilities", e.getMessage());
+        }
+    }
+
+    public static void setSaveStatusTrueInLocalForALock(Context context, String serial_number) {
+        try {
+            JSONArray mLocalSavedUserLocks = new JSONArray(
+                    readSharedPreferenceObject(context, "locks", "").equals("")
+                            ? "[]"
+                            : readSharedPreferenceObject(context, "locks", ""));
+
+            for (int i = 0; i < mLocalSavedUserLocks.length(); i++)
+                if (new JSONObject(mLocalSavedUserLocks.get(i).toString()).getString(TABLE_LOCK_COLUMN_SERIAL_NUMBER).equals(serial_number)) {
+                    mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, true));
+                    break;
+                }
 
             setValueInSharedPreferenceObject(context, "locks", mLocalSavedUserLocks.toString());
         } catch (JSONException e) {

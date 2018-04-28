@@ -130,8 +130,7 @@ public class LockInfoFragment extends Fragment {
     @SuppressLint("ResourceType")
     private void changeDoorStatusInView(Boolean status) {
         if (status) {
-            _img_door_status.setImageResource(R.drawable.ic_security_black_24dp);
-            _img_lock_status.setColorFilter(Integer.parseInt(getResources().getString(android.R.color.holo_green_dark)));
+            _img_door_status.setImageResource(R.drawable.ic_security_green_24dp);
             _txv_door_status.setText(R.string.door_is_close);
         } else {
             _img_door_status.setImageResource(R.drawable.ic_security_black_24dp);
@@ -153,7 +152,7 @@ public class LockInfoFragment extends Fragment {
     private void changeConnectionStatusInView(Boolean status) {
         if (status) {
             _img_connection_status.setImageResource(R.drawable.ic_cloud_done);
-            _img_connection_status.setColorFilter(Integer.parseInt(getResources().getString(android.R.color.holo_blue_light)));
+            _img_connection_status.setColorFilter(android.R.color.holo_blue_light);
         } else {
             _img_connection_status.setImageResource(R.drawable.ic_cloud_off_black_24dp);
         }
@@ -164,23 +163,22 @@ public class LockInfoFragment extends Fragment {
         switch (status) {
             case 1: {
                 _img_battery_status.setImageResource(R.drawable.ic_battery_20_black_24dp);
-                _img_battery_status.setColorFilter(Integer.parseInt(getResources().getString(android.R.color.holo_red_dark)));
+                _img_battery_status.setColorFilter(android.R.color.holo_red_dark);
                 break;
             }
             case 2: {
                 _img_battery_status.setImageResource(R.drawable.ic_battery_50_black_24dp);
-                _img_battery_status.setColorFilter(Integer.parseInt(getResources().getString(android.R.color.holo_red_light)));
+                _img_battery_status.setColorFilter(android.R.color.holo_red_light);
                 break;
             }
             case 3: {
                 _img_battery_status.setImageResource(R.drawable.ic_battery_80_black_24dp);
-                _img_battery_status.setColorFilter(Integer.parseInt(getResources().getString(android.R.color.holo_green_light)));
+                _img_battery_status.setColorFilter(android.R.color.holo_green_light);
                 break;
-
             }
             case 4: {
                 _img_battery_status.setImageResource(R.drawable.ic_battery_charging_full_black_24dp);
-                _img_battery_status.setColorFilter(Integer.parseInt(getResources().getString(android.R.color.holo_green_dark)));
+                _img_battery_status.setColorFilter(android.R.color.holo_green_dark);
                 break;
             }
             default:
@@ -193,23 +191,23 @@ public class LockInfoFragment extends Fragment {
         switch (status) {
             case 1: {
                 _img_wifi_status.setImageResource(R.drawable.ic_signal_cellular_0_bar_black_24dp);
-                _img_wifi_status.setColorFilter(Integer.parseInt(getResources().getString(android.R.color.holo_red_dark)));
+                _img_wifi_status.setColorFilter(android.R.color.holo_red_dark);
                 break;
             }
             case 2: {
                 _img_wifi_status.setImageResource(R.drawable.ic_signal_cellular_2_bar_black_24dp);
-                _img_wifi_status.setColorFilter(Integer.parseInt(getResources().getString(android.R.color.holo_blue_bright)));
+                _img_wifi_status.setColorFilter(android.R.color.holo_blue_bright);
                 break;
             }
             case 3: {
                 _img_wifi_status.setImageResource(R.drawable.ic_signal_cellular_3_bar_black_24dp);
-                _img_wifi_status.setColorFilter(Integer.parseInt(getResources().getString(android.R.color.holo_blue_light)));
+                _img_wifi_status.setColorFilter(android.R.color.holo_blue_light);
                 break;
 
             }
             case 4: {
                 _img_wifi_status.setImageResource(R.drawable.ic_signal_cellular_4_bar_black_24dp);
-                _img_wifi_status.setColorFilter(Integer.parseInt(getResources().getString(android.R.color.holo_blue_dark)));
+                _img_wifi_status.setColorFilter(android.R.color.holo_blue_dark);
                 break;
             }
             default:

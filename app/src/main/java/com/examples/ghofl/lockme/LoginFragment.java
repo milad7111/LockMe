@@ -71,14 +71,13 @@ public class LoginFragment extends Fragment {
                                 _prg_login.setVisibility(View.INVISIBLE);
 
                                 Utilities.syncDataBetweenLocalAndServer(getActivity().getBaseContext());
-
-                                Utilities.setValueInSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_mail),
+                                Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_EMAIL,
                                         _edt_mail.getText().toString());
 
                                 if (_chbx_remember.isChecked())
-                                    Utilities.setValueInSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_password), _edt_login_password.getText().toString());
+                                    Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_PASSWORD, _edt_login_password.getText().toString());
                                 else
-                                    Utilities.setValueInSharedPreferenceObject(getActivity(), getString(R.string.share_preference_parameter_password), getString(R.string.empty_phrase));
+                                    Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_PASSWORD, getString(R.string.empty_phrase));
 
                                 ((MainActivity) getActivity()).comeFromLogin();
                             }

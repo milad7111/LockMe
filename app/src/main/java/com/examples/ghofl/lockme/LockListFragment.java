@@ -97,7 +97,7 @@ public class LockListFragment extends Fragment {
         fab.setVisibility(View.VISIBLE);
 
         ((LockActivity) getActivity()).queryBuilder = DataQueryBuilder.create();
-        ((LockActivity) getActivity()).queryBuilder.setRelationsDepth(Integer.valueOf(2));
+        ((LockActivity) getActivity()).queryBuilder.setRelationsDepth(2);
         StringBuilder mWhereClause = new StringBuilder();
         mWhereClause.append("user");
         mWhereClause.append(".objectId=\'").append(((LockActivity) getActivity()).mCurrentUser.getObjectId()).append("\'");
@@ -105,12 +105,11 @@ public class LockListFragment extends Fragment {
         Backendless.Data.of("user_lock").find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Map>>() {
             public void handleResponse(List<Map> maps) {
                 if (maps.size() == 0)
-                    showLocalLocks(Utilities.getLockFromLocal(getActivity().getBaseContext()));
+                    Utilities.syncDataBetweenLocalAndServer(getActivity().getBaseContext());
                 else {
                     showServerLocks(maps);
                     fab.setVisibility(View.VISIBLE);
                 }
-
             }
 
             public void handleFault(BackendlessFault backendlessFault) {
@@ -179,7 +178,6 @@ public class LockListFragment extends Fragment {
         } catch (JSONException var4) {
             Log.e(getTag(), var4.getMessage());
         }
-
     }
 
     public interface OnFragmentInteractionListener {
