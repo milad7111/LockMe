@@ -30,7 +30,6 @@ import java.util.Map;
 public class LockActivity extends AppCompatActivity {
     public DataQueryBuilder queryBuilder;
     public BackendlessUser mCurrentUser;
-    public List<Map> mResponseListMap;
 
     public LockActivity() {
     }
@@ -41,7 +40,7 @@ public class LockActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mCurrentUser = Backendless.UserService.CurrentUser();
-        caheckExistSavedLock();
+        checkExistSavedLock();
     }
 
     public void LoadFragment(Fragment fragment, String tag) {
@@ -52,34 +51,30 @@ public class LockActivity extends AppCompatActivity {
         mFragmentTransaction.commit();
     }
 
-    private void caheckExistSavedLock() {
-        queryBuilder = DataQueryBuilder.create();
-        queryBuilder.setRelationsDepth(2);
-        StringBuilder mWhereClause = new StringBuilder();
-        mWhereClause.append(Utilities.TABLE_USER_LOCK_COLUMN_USER);
-        mWhereClause.append(".objectId=\'").append(mCurrentUser != null ? mCurrentUser.getObjectId() : null).append("\'");
-        queryBuilder.setWhereClause(String.valueOf(mWhereClause));
-        Backendless.Data.of(Utilities.TABLE_USER_LOCK).find(queryBuilder, new AsyncCallback<List<Map>>() {
-            public void handleResponse(List<Map> maps) {
-                if (maps.size() == 0) {
-                    if (Utilities.hasAdminLock(getBaseContext()))
-                        LoadFragment(new LockListFragment(), getString(R.string.fragment_lock_list_fragment));
-                    else
+    private void checkExistSavedLock() {
+        if (Utilities.getLockFromLocal(getBaseContext()).size() > 0)
+            LoadFragment(new LockListFragmentNew(), getString(R.string.fragment_lock_list_fragment));
+        else {
+            queryBuilder = DataQueryBuilder.create();
+            queryBuilder.setRelationsDepth(2);
+            StringBuilder mWhereClause = new StringBuilder();
+            mWhereClause.append(Utilities.TABLE_USER_LOCK_COLUMN_USER);
+            mWhereClause.append(".objectId=\'").append(mCurrentUser != null ? mCurrentUser.getObjectId() : null).append("\'");
+            queryBuilder.setWhereClause(String.valueOf(mWhereClause));
+            Backendless.Data.of(Utilities.TABLE_USER_LOCK).find(queryBuilder, new AsyncCallback<List<Map>>() {
+                public void handleResponse(List<Map> maps) {
+                    if (maps.size() != 0) {
+                        LoadFragment(new LockListFragmentNew(), getString(R.string.fragment_lock_list_fragment));
+                        Utilities.syncDataBetweenLocalAndServer(getBaseContext());
+                    } else
                         LoadFragment(new NoLockFragment(), getString(R.string.fragment_no_lock_fragment));
-                } else {
-                    mResponseListMap = maps;
-                    LoadFragment(new LockListFragment(), getString(R.string.fragment_lock_list_fragment));
                 }
-            }
 
-            public void handleFault(BackendlessFault backendlessFault) {
-                Log.e(backendlessFault.getCode(), backendlessFault.getMessage());
-                if (Utilities.hasAdminLock(getBaseContext()))
-                    LoadFragment(new LockListFragment(), getString(R.string.fragment_lock_list_fragment));
-                else
-                    LoadFragment(new NoLockFragment(), getString(R.string.fragment_no_lock_fragment));
-            }
-        });
+                public void handleFault(BackendlessFault backendlessFault) {
+                    Log.e(backendlessFault.getCode(), backendlessFault.getMessage());
+                }
+            });
+        }
     }
 
     public void checkConnectionToESP8266(final String tag, final String serialnumber) {

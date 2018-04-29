@@ -4,6 +4,9 @@ package com.examples.ghofl.lockme;
  * Created by PHD on 4/19/2018.
  */
 
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -16,8 +19,10 @@ import android.util.Log;
 import android.view.View;
 
 import com.backendless.Backendless;
+import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
+import com.backendless.persistence.DataQueryBuilder;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -30,16 +35,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Utilities {
-    public static final String APPLICATION_ID = "43F16378-A01D-6283-FFE2-EBA6CE6C6300";
-    public static final String SECRET_KEY = "A9F660C9-F062-D314-FF04-9E8DF5931E00";
+    public static final String APPLICATION_ID = "8178E63C-1936-5C74-FFC6-B90735872B00";
+    public static final String SECRET_KEY = "BA7F64EC-A219-CA3F-FFB7-B81B1BBC5300";
     public static final String SERVER_URL = "https://api.backendless.com";
 
-    public static final String TABLE_USERS = "users";
+    public static final String TABLE_USERS = "Users";
     public static final String TABLE_USERS_COLUMN_EMAIL = "email";
     public static final String TABLE_USERS_COLUMN_MOBILE_NUMBER = "mobile_number";
     public static final String TABLE_USERS_COLUMN_PASSWORD = "password";
 
-    public static final String TABLE_LOCK = "lock";
+    public static final String TABLE_LOCK = "Lock";
     public static final String TABLE_LOCK_COLUMN_BATTERY_STATUS = "battery_charge";
     public static final String TABLE_LOCK_COLUMN_CONNECTION_STATUS = "connection_status";
     public static final String TABLE_LOCK_COLUMN_LOCK_SSID = "lock_ssid";
@@ -49,7 +54,7 @@ public class Utilities {
     public static final String TABLE_LOCK_COLUMN_WIFI_STATUS = "wifi_status";
     public static final String TABLE_LOCK_COLUMN_MEAN_POWER_CONS = "mean_power_cons";
 
-    public static final String TABLE_SERIAL_NUMBER = "serial_number";
+    public static final String TABLE_SERIAL_NUMBER = "SerialNumber";
     public static final String TABLE_SERIAL_NUMBER_COLUMN_CONFIGURATION = "configuration";
     public static final String TABLE_SERIAL_NUMBER_COLUMN_DATE_TIME = "date_time";
     public static final String TABLE_SERIAL_NUMBER_COLUMN_GENERATION = "generation";
@@ -57,7 +62,7 @@ public class Utilities {
     public static final String TABLE_SERIAL_NUMBER_COLUMN_NUMBER = "number";
     public static final String TABLE_SERIAL_NUMBER_COLUMN_SERIAL_NUMBER = "serial_number";
 
-    public static final String TABLE_USER_LOCK = "user_lock";
+    public static final String TABLE_USER_LOCK = "UserLock";
     public static final String TABLE_USER_LOCK_COLUMN_SAVE_STATUS = "save_status";
     public static final String TABLE_USER_LOCK_COLUMN_ADMIN_STATUS = "admin_status";
     public static final String TABLE_USER_LOCK_COLUMN_LOCK = "lock";
@@ -328,26 +333,64 @@ public class Utilities {
         return new ArrayList<>();
     }
 
-    public static void saveMultiUserLocksInServer(final Context context, ArrayList<JSONObject> user_locks) {
+    public static void saveMultiUserLocksInServer(final Context context, final ArrayList<JSONObject> user_locks) {
         List<Map> mUserLockMapList = new ArrayList<>();
 
         try {
             for (int i = 0; i < user_locks.size(); i++) {
-                Map<String, Object> mUserLockMapObject = new HashMap<>();
-
-                mUserLockMapObject.put(TABLE_USER_LOCK_COLUMN_LOCK_NAME, user_locks.get(i).getString(TABLE_USER_LOCK_COLUMN_LOCK_NAME));
+                final UserLockClass mUserLockClass = new UserLockClass();
+                mUserLockClass.setUser(Backendless.UserService.CurrentUser());
                 //because just admin locks may be exists in local but not in server
-                mUserLockMapObject.put(TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, true);
-                mUserLockMapObject.put(TABLE_USER_LOCK_COLUMN_USER, Backendless.UserService.CurrentUser());
+                mUserLockClass.setAdminStatus(true);
+                mUserLockClass.setLockName(user_locks.get(i).getString(TABLE_USER_LOCK_COLUMN_LOCK_NAME));
 
-                LockClass mLockObject = new LockClass();
-                mLockObject.setSerialNumber(user_locks.get(i).getString(TABLE_LOCK_COLUMN_SERIAL_NUMBER));
-                //Write a service on server for insert in userlock, get serial number and return lock to add as relation in user lock
+                final String mSerialNumber = user_locks.get(i).getString(TABLE_LOCK_COLUMN_SERIAL_NUMBER);
 
-                mUserLockMapObject.put(TABLE_USER_LOCK_COLUMN_LOCK, mLockObject);
+                DataQueryBuilder queryBuilder = DataQueryBuilder.create();
+                queryBuilder.setRelationsDepth(1);
+                StringBuilder mWhereClause = new StringBuilder();
+                mWhereClause
+                        .append(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER)
+                        .append(".")
+                        .append(Utilities.TABLE_SERIAL_NUMBER_COLUMN_SERIAL_NUMBER)
+                        .append("=\'")
+                        .append(mSerialNumber)
+                        .append("\'");
 
-                mUserLockMapList.add(mUserLockMapObject);
+                queryBuilder.setWhereClause(String.valueOf(mWhereClause));
+                Backendless.Data.of(Utilities.TABLE_LOCK).find(queryBuilder, new AsyncCallback<List<Map>>() {
+                    public void handleResponse(List<Map> maps) {
+                        if (maps.size() != 0) {
+                            LockClass mLockClass = new LockClass();
+                            mLockClass.setObjectId(maps.get(0).get("objectId").toString());
+
+                            mUserLockClass.setLock(mLockClass);
+                        } else {
+                            Log.e("Utilities", "There is no Lock with serial number : " + mSerialNumber);
+                        }
+                    }
+
+                    public void handleFault(BackendlessFault backendlessFault) {
+                        Log.e(backendlessFault.getCode(), backendlessFault.getMessage());
+                    }
+                });
             }
+//            for (int i = 0; i < user_locks.size(); i++) {
+//                Map<String, Object> mUserLockMapObject = new HashMap<>();
+//
+//                mUserLockMapObject.put(TABLE_USER_LOCK_COLUMN_LOCK_NAME, user_locks.get(i).getString(TABLE_USER_LOCK_COLUMN_LOCK_NAME));
+//                //because just admin locks may be exists in local but not in server
+//                mUserLockMapObject.put(TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, true);
+//                mUserLockMapObject.put(TABLE_USER_LOCK_COLUMN_USER, Backendless.UserService.CurrentUser());
+//
+//                LockClass mLockObject = new LockClass();
+//                mLockObject.setSerialNumber(user_locks.get(i).getString(TABLE_LOCK_COLUMN_SERIAL_NUMBER));
+//                //Write a service on server for insert in userlock, get serial number and return lock to add as relation in user lock
+//
+//                mUserLockMapObject.put(TABLE_USER_LOCK_COLUMN_LOCK, mLockObject);
+//
+//                mUserLockMapList.add(mUserLockMapObject);
+//            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -377,7 +420,7 @@ public class Utilities {
                             : readSharedPreferenceObject(context, "locks", ""));
 
             for (int i = 0; i < mLocalSavedUserLocks.length(); i++)
-                mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, true));
+                mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(TABLE_USER_LOCK_COLUMN_SAVE_STATUS, true));
 
             setValueInSharedPreferenceObject(context, "locks", mLocalSavedUserLocks.toString());
         } catch (JSONException e) {

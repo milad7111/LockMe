@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">LockMe</string>
-    <string name="API_KEY">A9F660C9-F062-D314-FF04-9E8DF5931E00</string>
+    <string name="SECRET_KEY">A9F660C9-F062-D314-FF04-9E8DF5931E00</string>
     <string name="APPLICATION_ID">43F16378-A01D-6283-FFE2-EBA6CE6C6300</string>
     <string name="SERVER_URL">https://api.backendless.com</string>
     <string name="TABLE_LOCK">lock</string>
@@ -29,34 +29,17 @@
     <string name="TABLE_USER_LOCK_COLUMN_NAME">name</string>
     <string name="TABLE_USER_LOCK_COLUMN_USER">user</string>
     <string name="WIFI_PREFIX_NAME">Lock Wifi</string>
-    <string name="abc_action_bar_home_description">Navigate home</string>
-    <string name="abc_action_bar_home_description_format">%1$s, %2$s</string>
-    <string name="abc_action_bar_home_subtitle_description_format">%1$s, %2$s, %3$s</string>
     <string name="abc_action_bar_up_description">Navigate up</string>
     <string name="abc_action_menu_overflow_description">More options</string>
     <string name="abc_action_mode_done">Done</string>
-    <string name="abc_activity_chooser_view_see_all">See all</string>
-    <string name="abc_activitychooserview_choose_application">Choose an app</string>
     <string name="abc_capital_off">OFF</string>
     <string name="abc_capital_on">ON</string>
-    <string name="abc_font_family_body_1_material">sans-serif</string>
-    <string name="abc_font_family_body_2_material">sans-serif-medium</string>
-    <string name="abc_font_family_button_material">sans-serif-medium</string>
-    <string name="abc_font_family_caption_material">sans-serif</string>
-    <string name="abc_font_family_display_1_material">sans-serif</string>
-    <string name="abc_font_family_display_2_material">sans-serif</string>
-    <string name="abc_font_family_display_3_material">sans-serif</string>
-    <string name="abc_font_family_display_4_material">sans-serif-light</string>
-    <string name="abc_font_family_menu_material">sans-serif</string>
-    <string name="abc_font_family_subhead_material">sans-serif</string>
     <string name="abc_font_family_title_material">sans-serif-medium</string>
     <string name="abc_search_hint">Search…</string>
     <string name="abc_searchview_description_clear">Clear query</string>
-    <string name="abc_searchview_description_query">Search query</string>
     <string name="abc_searchview_description_search">Search</string>
     <string name="abc_searchview_description_submit">Submit query</string>
     <string name="abc_searchview_description_voice">Voice search</string>
-    <string name="abc_shareactionprovider_share_with_application">Share with %s</string>
     <string name="abc_toolbar_collapse_description">Collapse</string>
     <string name="action_sign_in">Sign in or register</string>
     <string name="action_sign_in_short">Sign in</string>

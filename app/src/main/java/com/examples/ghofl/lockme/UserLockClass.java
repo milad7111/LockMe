@@ -5,63 +5,69 @@ import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
 
-import java.util.concurrent.locks.Lock;
-
 /**
  * Created by family on 4/24/2018.
  */
 
 public class UserLockClass {
 
-    String mUserLockID;
-    String mLockName;
-    Boolean mAdminStatus;
-    LockClass mLock;
-    BackendlessUser mUser;
+    String objectId = null;
+    String lockPlusUser = null;
+    String lockName = null;
+    Boolean adminStatus = false;
+    LockClass lock = new LockClass();
+    BackendlessUser user = Backendless.UserService.CurrentUser();
 
-    public String getUserLockID() {
-        return mUserLockID;
+    public String getObjectId() {
+        return objectId;
     }
 
-    public void mUserLockID(String mUserLockID) {
-        this.mUserLockID = mUserLockID;
+    public void setObjectId(String objectId) {
+        this.objectId = objectId;
+    }
+
+    public String getLockPlusUser() {
+        return lockPlusUser;
+    }
+
+    public void setLockPlusUser() {
+        this.lockPlusUser = lock.getObjectId() + user.getObjectId();
     }
 
     public String getLockName() {
-        return mLockName;
+        return lockName;
     }
 
-    public void setLockName(String mLockName) {
-        this.mLockName = mLockName;
+    public void setLockName(String lockName) {
+        this.lockName = lockName;
     }
 
     public Boolean getAdminStatus() {
-        return mAdminStatus;
+        return adminStatus;
     }
 
-    public void setAdminStatus(Boolean mAdminStatus) {
-        this.mAdminStatus = mAdminStatus;
+    public void setAdminStatus(Boolean adminStatus) {
+        this.adminStatus = adminStatus;
     }
 
     public LockClass getLock() {
-        return mLock;
+        return lock;
     }
 
-    public void setLock(LockClass mLock) {
-        this.mLock = mLock;
+    public void setLock(LockClass lock) {
+        this.lock = lock;
     }
 
     public BackendlessUser getUser() {
-        return mUser;
+        return user;
     }
 
-    public void setUser(BackendlessUser mUser) {
-        this.mUser = mUser;
+    public void setUser(BackendlessUser user) {
+        this.user = user;
     }
 
-    public void saveNewUserLock()
-    {
-        Backendless.Persistence.save(this, new AsyncCallback<UserLockClass>() {
+    public void saveNewUserLock() {
+        Backendless.Data.save(this, new AsyncCallback<UserLockClass>() {
 
             @Override
             public void handleResponse(UserLockClass response) {

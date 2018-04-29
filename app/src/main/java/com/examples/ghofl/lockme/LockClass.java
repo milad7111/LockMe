@@ -1,7 +1,14 @@
 package com.examples.ghofl.lockme;
 
+import android.hardware.usb.UsbRequest;
+
 import com.backendless.Backendless;
 import com.backendless.exceptions.BackendlessFault;
+import com.backendless.persistence.DataQueryBuilder;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Created by family on 4/24/2018.
@@ -9,78 +16,113 @@ import com.backendless.exceptions.BackendlessFault;
 
 public class LockClass {
 
-    String mLockID;
-    String mSerialNumber;
-    Boolean mLockStatus;
-    Boolean mDoorStatus;
-    Boolean mConnectionStatus;
-    Integer mBatteryStatus;
-    Integer mWifiStatus;
-    Integer mUserID;
+    private String objectId;
+    private String serialNumber;
+    private Boolean lockStatus;
+    private Boolean doorStatus;
+    private Boolean connectionStatus;
+    private Integer batteryStatus;
+    private Integer wifiStatus;
+    private Integer user;
+    private Date created;
+    private Date updated;
+    private List<UserLockClass> userLocks;
 
-    public String getLockID() {
-        return mLockID;
+
+    public String getObjectId() {
+        return objectId;
     }
 
-    public void setLockID(String mLockID) {
-        this.mLockID = mLockID;
+    public void setObjectId(String objectId) {
+        this.objectId = objectId;
     }
 
     public String getSerialNumber() {
-        return mSerialNumber;
+        return serialNumber;
     }
 
-    public void setSerialNumber(String mSerialNumber) {
-        this.mSerialNumber = mSerialNumber;
+    public void setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
     }
 
     public Boolean getLockStatus() {
-        return mLockStatus;
+        return lockStatus;
     }
 
-    public void setLockStatus(Boolean mLockStatus) {
-        this.mLockStatus = mLockStatus;
+    public void setLockStatus(Boolean lockStatus) {
+        this.lockStatus = lockStatus;
     }
 
     public Boolean getDoorStatus() {
-        return mDoorStatus;
+        return doorStatus;
     }
 
-    public void setDoorStatus(Boolean mDoorStatus) {
-        this.mDoorStatus = mDoorStatus;
+    public void setDoorStatus(Boolean doorStatus) {
+        this.doorStatus = doorStatus;
     }
 
     public Boolean getConnectionStatus() {
-        return mConnectionStatus;
+        return connectionStatus;
     }
 
-    public void setConnectionStatus(Boolean mConnectionStatus) {
-        this.mConnectionStatus = mConnectionStatus;
+    public void setConnectionStatus(Boolean connectionStatus) {
+        this.connectionStatus = connectionStatus;
     }
 
     public Integer getBatteryStatus() {
         //Between 1-4
-        return mBatteryStatus;
+        return batteryStatus;
     }
 
-    public void setBatteryStatus(Integer mBatteryStatus) {
-        this.mBatteryStatus = mBatteryStatus;
+    public void setBatteryStatus(Integer batteryStatus) {
+        this.batteryStatus = batteryStatus;
     }
 
-    public Integer getmWifiStatus() {
+    public Integer getWifiStatus() {
         //Between 0-4
-        return mWifiStatus;
+        return wifiStatus;
     }
 
-    public void setWifiStatus(Integer mWifiStatus) {
-        this.mWifiStatus = mWifiStatus;
+    public void setWifiStatus(Integer wifiStatus) {
+        this.wifiStatus = wifiStatus;
     }
 
-    public Integer getUserID() {
-        return mUserID;
+    public Integer getUser() {
+        return user;
     }
 
-    public void setUserID(Integer mUserID) {
-        this.mUserID = mUserID;
+    public void setUser(Integer user) {
+        this.user = user;
+    }
+
+    public Date getCreated() {
+        return created;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+
+    public Date getUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(Date updated) {
+        this.updated = updated;
+    }
+
+    public void addUserLock(UserLockClass userlock) {
+        if (userLocks == null)
+            userLocks = new ArrayList<UserLockClass>();
+
+        userLocks.add(userlock);
+    }
+
+    public List<UserLockClass> getUserLocks() {
+        return userLocks;
+    }
+
+    public void setUserLocks(List<UserLockClass> userLocks) {
+        this.userLocks = userLocks;
     }
 }

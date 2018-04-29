@@ -14,7 +14,7 @@
 
     <LinearLayout
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_marginLeft="16dp"
         android:layout_marginTop="8dp"
         android:layout_weight="5"
@@ -23,15 +23,17 @@
         <TextView
             android:id="@+id/txv_lock_name"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:text="LockName"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium" />
 
         <TextView
             android:id="@+id/txv_is_admin"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
             android:layout_marginTop="8dp"
+            android:layout_weight="1"
             android:text="admin"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Small" />
 
@@ -43,7 +45,7 @@
         android:layout_height="wrap_content"
         android:layout_marginRight="8dp"
         android:layout_weight="1"
-        android:src="@drawable/img_close_lock" />
-
+        android:src="@drawable/ic_close_lock_48dp"
+        android:layout_gravity="center"/>
 
 </LinearLayout>

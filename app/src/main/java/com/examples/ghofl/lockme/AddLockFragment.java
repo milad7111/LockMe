@@ -217,6 +217,7 @@ public class AddLockFragment extends Fragment {
                             !mSavedWifiNames.contains((mWifiLockList.get(i)).SSID)) {
                         mWifiLockArrayList.add((mWifiLockList.get(i)).SSID);
                     }
+                    mWifiLockArrayList.add((mWifiLockList.get(i)).SSID);
                 }
 
                 _prg_wifi_lock_list.setVisibility(View.GONE);
@@ -227,6 +228,7 @@ public class AddLockFragment extends Fragment {
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri var1);
+
     }
 
     private void saveLockToLocal(Boolean saved_on_server) {
@@ -262,7 +264,7 @@ public class AddLockFragment extends Fragment {
         _prg_wifi_lock_list.setVisibility(View.VISIBLE);
 
         RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
-        String url = "http://192.168.4.1";//getString(R.string.esp_http_address_check);
+        String url = getString(R.string.esp_http_address_check);
         StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
             @Override
             public void onResponse(Object response) {
