@@ -35,7 +35,6 @@ import java.util.Map;
 
 public class LockListFragmentNew extends Fragment {
     private LockListFragmentNew.OnFragmentInteractionListener mListener;
-    private ArrayList<String> mSerialNumbers;
     private RecyclerView _rsv_lock_list_new;
     private LockListAdapter mLockListAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
@@ -59,7 +58,6 @@ public class LockListFragmentNew extends Fragment {
         // in content do not change the layout size of the RecyclerView
         _rsv_lock_list_new.setHasFixedSize(true);
 
-        // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(getActivity().getBaseContext());
         _rsv_lock_list_new.setLayoutManager(mLayoutManager);
 
@@ -80,19 +78,16 @@ public class LockListFragmentNew extends Fragment {
     }
 
     public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
+        if (mListener != null)
             mListener.onFragmentInteraction(uri);
-        }
-
     }
 
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof LockListFragmentNew.OnFragmentInteractionListener) {
+        if (context instanceof LockListFragmentNew.OnFragmentInteractionListener)
             mListener = (LockListFragmentNew.OnFragmentInteractionListener) context;
-        } else {
+        else
             throw new RuntimeException(context.toString() + " must implement OnFragmentInteractionListener");
-        }
     }
 
     public void onDetach() {
@@ -115,6 +110,7 @@ public class LockListFragmentNew extends Fragment {
         mWhereClause.append(Utilities.TABLE_USER_LOCK_COLUMN_USER);
         mWhereClause.append(".objectId=\'").append(((LockActivity) getActivity()).mCurrentUser.getObjectId()).append("\'");
         ((LockActivity) getActivity()).queryBuilder.setWhereClause(String.valueOf(mWhereClause));
+
         Backendless.Data.of(Utilities.TABLE_USER_LOCK).find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Map>>() {
             public void handleResponse(List<Map> maps) {
                 if (maps.size() == 0)
@@ -132,7 +128,6 @@ public class LockListFragmentNew extends Fragment {
     }
 
     private void showServerLocks(List<Map> lock_list) {
-        mSerialNumbers = new ArrayList();
         Iterator mLockListIterator = lock_list.iterator();
 
         while (mLockListIterator.hasNext()) {
@@ -153,7 +148,6 @@ public class LockListFragmentNew extends Fragment {
     }
 
     private void showLocalLocks(ArrayList<JSONObject> lock_list) {
-//        mSerialNumbers = new ArrayList();
         Iterator mLockListIterator = lock_list.iterator();
 
         while (mLockListIterator.hasNext()) {

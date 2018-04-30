@@ -30,6 +30,7 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.Response.Listener;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
@@ -217,7 +218,9 @@ public class AddLockFragment extends Fragment {
                             !mSavedWifiNames.contains((mWifiLockList.get(i)).SSID)) {
                         mWifiLockArrayList.add((mWifiLockList.get(i)).SSID);
                     }
-                    mWifiLockArrayList.add((mWifiLockList.get(i)).SSID);
+                    ///////////////////////////////
+//                    mWifiLockArrayList.add((mWifiLockList.get(i)).SSID);
+                    //////////////////////////////
                 }
 
                 _prg_wifi_lock_list.setVisibility(View.GONE);
@@ -263,9 +266,14 @@ public class AddLockFragment extends Fragment {
     public void checkConnectionToESP8266() {
         _prg_wifi_lock_list.setVisibility(View.VISIBLE);
 
-        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
+        RequestQueue MyRequestQueueForCheck = Volley.newRequestQueue(getActivity());
         String url = getString(R.string.esp_http_address_check);
-        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        StringRequest MyStringRequestForCheck = new StringRequest(Request.Method.GET, url, new Listener() {
             @Override
             public void onResponse(Object response) {
                 Log.i(getTag(), response.toString());
@@ -313,12 +321,7 @@ public class AddLockFragment extends Fragment {
             }
         });
 
-        MyStringRequest.setRetryPolicy(new DefaultRetryPolicy(
-                5000,
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-        MyRequestQueue.add(MyStringRequest);
+        MyRequestQueueForCheck.add(MyStringRequestForCheck);
     }
 
     private void goToLockInfo() {

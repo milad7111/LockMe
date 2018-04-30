@@ -67,19 +67,16 @@ public class LockListFragment extends Fragment {
     }
 
     public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
+        if (mListener != null)
             mListener.onFragmentInteraction(uri);
-        }
-
     }
 
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof LockListFragment.OnFragmentInteractionListener) {
+        if (context instanceof LockListFragment.OnFragmentInteractionListener)
             mListener = (LockListFragment.OnFragmentInteractionListener) context;
-        } else {
+        else
             throw new RuntimeException(context.toString() + " must implement OnFragmentInteractionListener");
-        }
     }
 
     public void onDetach() {
@@ -97,11 +94,13 @@ public class LockListFragment extends Fragment {
         fab.setVisibility(View.VISIBLE);
 
         ((LockActivity) getActivity()).queryBuilder = DataQueryBuilder.create();
-        ((LockActivity) getActivity()).queryBuilder.setRelationsDepth(2);
+        ((LockActivity) getActivity()).queryBuilder.setRelationsDepth(1);
+
         StringBuilder mWhereClause = new StringBuilder();
         mWhereClause.append("user");
         mWhereClause.append(".objectId=\'").append(((LockActivity) getActivity()).mCurrentUser.getObjectId()).append("\'");
         ((LockActivity) getActivity()).queryBuilder.setWhereClause(String.valueOf(mWhereClause));
+
         Backendless.Data.of("user_lock").find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Map>>() {
             public void handleResponse(List<Map> maps) {
                 if (maps.size() == 0)

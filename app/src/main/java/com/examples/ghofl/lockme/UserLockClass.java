@@ -1,5 +1,8 @@
 package com.examples.ghofl.lockme;
 
+import android.content.Context;
+import android.util.Log;
+
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
@@ -11,10 +14,11 @@ import com.backendless.exceptions.BackendlessFault;
 
 public class UserLockClass {
 
+    Context mContext;
     String objectId = null;
-    String lockPlusUser = null;
-    String lockName = null;
-    Boolean adminStatus = false;
+    String lock_plus_user = null;
+    String lock_name = null;
+    Boolean admin_status = false;
     LockClass lock = new LockClass();
     BackendlessUser user = Backendless.UserService.CurrentUser();
 
@@ -27,27 +31,27 @@ public class UserLockClass {
     }
 
     public String getLockPlusUser() {
-        return lockPlusUser;
+        return lock_plus_user;
     }
 
     public void setLockPlusUser() {
-        this.lockPlusUser = lock.getObjectId() + user.getObjectId();
+        this.lock_plus_user = lock.getObjectId() + user.getObjectId();
     }
 
     public String getLockName() {
-        return lockName;
+        return lock_name;
     }
 
     public void setLockName(String lockName) {
-        this.lockName = lockName;
+        this.lock_name = lockName;
     }
 
     public Boolean getAdminStatus() {
-        return adminStatus;
+        return admin_status;
     }
 
     public void setAdminStatus(Boolean adminStatus) {
-        this.adminStatus = adminStatus;
+        this.admin_status = adminStatus;
     }
 
     public LockClass getLock() {
@@ -65,21 +69,4 @@ public class UserLockClass {
     public void setUser(BackendlessUser user) {
         this.user = user;
     }
-
-    public void saveNewUserLock() {
-        Backendless.Data.save(this, new AsyncCallback<UserLockClass>() {
-
-            @Override
-            public void handleResponse(UserLockClass response) {
-
-            }
-
-            @Override
-            public void handleFault(BackendlessFault fault) {
-
-            }
-        });
-    }
-
-
 }

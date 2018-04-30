@@ -17,16 +17,16 @@ import java.util.List;
 public class LockClass {
 
     private String objectId;
-    private String serialNumber;
-    private Boolean lockStatus;
-    private Boolean doorStatus;
-    private Boolean connectionStatus;
-    private Integer batteryStatus;
-    private Integer wifiStatus;
+    private String serial_number;
+    private Boolean lock_status;
+    private Boolean door_status;
+    private Boolean connection_status;
+    private Integer battery_status;
+    private Integer wifi_status;
     private Integer user;
     private Date created;
     private Date updated;
-    private List<UserLockClass> userLocks;
+//    private List<UserLockClass> userLocks;
 
 
     public String getObjectId() {
@@ -38,53 +38,51 @@ public class LockClass {
     }
 
     public String getSerialNumber() {
-        return serialNumber;
+        return serial_number;
     }
 
     public void setSerialNumber(String serialNumber) {
-        this.serialNumber = serialNumber;
+        this.serial_number = serialNumber;
     }
 
     public Boolean getLockStatus() {
-        return lockStatus;
+        return lock_status;
     }
 
     public void setLockStatus(Boolean lockStatus) {
-        this.lockStatus = lockStatus;
+        this.lock_status = lockStatus;
     }
 
     public Boolean getDoorStatus() {
-        return doorStatus;
+        return door_status;
     }
 
     public void setDoorStatus(Boolean doorStatus) {
-        this.doorStatus = doorStatus;
+        this.door_status = doorStatus;
     }
 
     public Boolean getConnectionStatus() {
-        return connectionStatus;
+        return connection_status;
     }
 
     public void setConnectionStatus(Boolean connectionStatus) {
-        this.connectionStatus = connectionStatus;
+        this.connection_status = connectionStatus;
     }
 
     public Integer getBatteryStatus() {
-        //Between 1-4
-        return batteryStatus;
+        return battery_status;
     }
 
     public void setBatteryStatus(Integer batteryStatus) {
-        this.batteryStatus = batteryStatus;
+        this.battery_status = batteryStatus;
     }
 
     public Integer getWifiStatus() {
-        //Between 0-4
-        return wifiStatus;
+        return wifi_status;
     }
 
     public void setWifiStatus(Integer wifiStatus) {
-        this.wifiStatus = wifiStatus;
+        this.wifi_status = wifiStatus;
     }
 
     public Integer getUser() {
@@ -111,18 +109,18 @@ public class LockClass {
         this.updated = updated;
     }
 
-    public void addUserLock(UserLockClass userlock) {
-        if (userLocks == null)
-            userLocks = new ArrayList<UserLockClass>();
+//    public void addUserLock(UserLockClass userlock) {
+//        if (userLocks == null)
+//            userLocks = new ArrayList<UserLockClass>();
+//
+//        userLocks.add(userlock);
+//    }
 
-        userLocks.add(userlock);
-    }
+//    public List<UserLockClass> getUserLocks() {
+//        return userLocks;
+//    }
 
-    public List<UserLockClass> getUserLocks() {
-        return userLocks;
-    }
-
-    public void setUserLocks(List<UserLockClass> userLocks) {
-        this.userLocks = userLocks;
-    }
+//    public void setUserLocks(List<UserLockClass> userLocks) {
+//        this.userLocks = userLocks;
+//    }
 }
