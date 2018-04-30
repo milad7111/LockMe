@@ -93,7 +93,7 @@
     <string name="dialog_choose_how_to_connect_internet">Choose how to connect to internet.</string>
     <string name="there_is_no_lock">There is no lock</string>
     <string name="connect_to_internet">Connect to Internet</string>
-    <string name="backendless_base_http_url">https://api.backendless.com/</string>
+    <string name="backendless_base_http_url">http://api.backendless.com/</string>
     <string name="lock_is_secure">Locked</string>
     <string name="lock_is_not_secure">Opened</string>
     <string name="lock_wifi_strength_is_low">Lock Wifi strength is low, try again.</string>

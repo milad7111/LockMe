@@ -158,7 +158,6 @@ public class ConnectLockToInternetFragment extends Fragment {
             @Override
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<>();
-                // the POST parameters:
                 params.put(Utilities.SSID_FOR_CONNECT_ESP8266_TO_INTERNET, ssid);
                 params.put(Utilities.PASSWORD_FOR_CONNECT_ESP8266_TO_INTERNET, password);
                 return params;

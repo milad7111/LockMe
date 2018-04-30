@@ -89,7 +89,7 @@ public class NoLockFragment extends Fragment {
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {
                 _txv_no_lock.setText(getString(R.string.connect_to_internet));
-                Log.e(getTag(), error.getMessage());
+                Log.e(getTag(), error.toString());
             }
         });
         MyRequestQueue.add(MyStringRequest);

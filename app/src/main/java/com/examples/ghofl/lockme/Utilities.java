@@ -4,19 +4,28 @@ package com.examples.ghofl.lockme;
  * Created by PHD on 4/19/2018.
  */
 
+import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputEditText;
+import android.support.graphics.drawable.VectorDrawableCompat;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
@@ -37,9 +46,8 @@ import org.json.JSONObject;
 public class Utilities {
     public static final String APPLICATION_ID = "8178E63C-1936-5C74-FFC6-B90735872B00";
     public static final String SECRET_KEY = "BA7F64EC-A219-CA3F-FFB7-B81B1BBC5300";
-    public static final String SERVER_URL = "https://api.backendless.com";
+    public static final String SERVER_URL = "http://api.backendless.com";
 
-    public static final String TABLE_USERS = "Users";
     public static final String TABLE_USERS_COLUMN_EMAIL = "email";
     public static final String TABLE_USERS_COLUMN_MOBILE_NUMBER = "mobile_number";
     public static final String TABLE_USERS_COLUMN_PASSWORD = "password";
@@ -47,18 +55,16 @@ public class Utilities {
 
     public static final String TABLE_LOCK = "Lock";
     public static final String TABLE_LOCK_COLUMN_RELATED_USERS = "related_users";
-    public static final String TABLE_LOCK_COLUMN_BATTERY_STATUS = "battery_charge";
+    public static final String TABLE_LOCK_COLUMN_BATTERY_STATUS = "battery_status";
     public static final String TABLE_LOCK_COLUMN_CONNECTION_STATUS = "connection_status";
     public static final String TABLE_LOCK_COLUMN_LOCK_SSID = "lock_ssid";
     public static final String TABLE_LOCK_COLUMN_DOOR_STATUS = "door_status";
     public static final String TABLE_LOCK_COLUMN_LOCK_STATUS = "lock_status";
     public static final String TABLE_LOCK_COLUMN_SERIAL_NUMBER = "serial_number";
     public static final String TABLE_LOCK_COLUMN_WIFI_STATUS = "wifi_status";
-    public static final String TABLE_LOCK_COLUMN_MEAN_POWER_CONS = "mean_power_cons";
 
     public static final String TABLE_SERIAL_NUMBER = "SerialNumber";
     public static final String TABLE_SERIAL_NUMBER_COLUMN_CONFIGURATION = "configuration";
-    public static final String TABLE_SERIAL_NUMBER_COLUMN_DATE_TIME = "date_time";
     public static final String TABLE_SERIAL_NUMBER_COLUMN_GENERATION = "generation";
     public static final String TABLE_SERIAL_NUMBER_COLUMN_MAC_ADDRESS = "mac_address";
     public static final String TABLE_SERIAL_NUMBER_COLUMN_NUMBER = "number";
@@ -68,100 +74,12 @@ public class Utilities {
     public static final String TABLE_USER_LOCK_COLUMN_SAVE_STATUS = "save_status";
     public static final String TABLE_USER_LOCK_COLUMN_ADMIN_STATUS = "admin_status";
     public static final String TABLE_USER_LOCK_COLUMN_LOCK_PLUS_USER = "lock_plus_user";
-    public static final String TABLE_USER_LOCK_COLUMN_LOCK = "lock";
     public static final String TABLE_USER_LOCK_COLUMN_LOCK_NAME = "lock_name";
-    public static final String TABLE_USER_LOCK_COLUMN_USER = "user";
 
     public static final String SSID_FOR_CONNECT_ESP8266_TO_INTERNET = "needed_ssid";
     public static final String PASSWORD_FOR_CONNECT_ESP8266_TO_INTERNET = "needed_password";
 
-
     public Utilities() {
-    }
-
-    public static Boolean getRealLockStatus(Map map) {
-        try {
-            JSONObject mLockObject = new JSONObject();
-            if ((new JSONObject(map)).get(TABLE_USER_LOCK_COLUMN_LOCK) instanceof JSONObject)
-                mLockObject = new JSONObject((new JSONObject(map)).get(TABLE_USER_LOCK_COLUMN_LOCK).toString());
-            else if ((new JSONObject(map)).get(TABLE_USER_LOCK_COLUMN_LOCK) instanceof JSONArray)
-                mLockObject = (new JSONArray((new JSONObject(map)).get(TABLE_USER_LOCK_COLUMN_LOCK).toString())).getJSONObject(0);
-
-            return mLockObject.getBoolean(TABLE_LOCK_COLUMN_LOCK_STATUS) && mLockObject.getBoolean(TABLE_LOCK_COLUMN_DOOR_STATUS);
-        } catch (JSONException e) {
-            Log.e("Utilities", e.getMessage());
-            return null;
-        }
-    }
-
-    public static Boolean getLockStatus(Map map) {
-        try {
-            return (new JSONObject(map)).getBoolean(TABLE_LOCK_COLUMN_LOCK_STATUS);
-        } catch (JSONException e) {
-            Log.e("Utilities", e.getMessage());
-            return null;
-        }
-    }
-
-    public static Boolean getDoorStatus(Map map) {
-        try {
-            return (new JSONObject(map)).getBoolean(TABLE_LOCK_COLUMN_DOOR_STATUS);
-        } catch (JSONException e) {
-            Log.e("Utilities", e.getMessage());
-            return null;
-        }
-    }
-
-    public static Boolean getConnectionStatus(Map map) {
-        try {
-            return (new JSONObject(map)).getBoolean(TABLE_LOCK_COLUMN_CONNECTION_STATUS);
-        } catch (JSONException e) {
-            Log.e("Utilities", e.getMessage());
-            return null;
-        }
-    }
-
-    public static int getBatteryStatus(Map map) {
-        try {
-            return ((new JSONObject(map)).getInt(TABLE_LOCK_COLUMN_BATTERY_STATUS));
-        } catch (JSONException e) {
-            Log.e("Utilities", e.getMessage());
-            return -1;
-        }
-    }
-
-    public static int getWifiStatus(Map map) {
-        try {
-            return ((new JSONObject(map)).getInt(TABLE_LOCK_COLUMN_WIFI_STATUS));
-        } catch (JSONException e) {
-            Log.e("Utilities", e.getMessage());
-            return -1;
-        }
-    }
-
-    public static String getValueFromLockObject(Map map, String parameter) {
-        try {
-            JSONObject mLockObject = new JSONObject();
-            if ((new JSONObject(map)).get(TABLE_USER_LOCK_COLUMN_LOCK) instanceof JSONObject) {
-                mLockObject = new JSONObject((new JSONObject(map)).get(TABLE_USER_LOCK_COLUMN_LOCK).toString());
-            } else if ((new JSONObject(map)).get(TABLE_USER_LOCK_COLUMN_LOCK) instanceof JSONArray) {
-                mLockObject = (new JSONArray((new JSONObject(map)).get(TABLE_USER_LOCK_COLUMN_LOCK).toString())).getJSONObject(0);
-            }
-
-            return mLockObject.getString(parameter);
-        } catch (JSONException e) {
-            Log.e("Utilities", e.getMessage());
-            return null;
-        }
-    }
-
-    public static String getLockSerialNumber(Map map) {
-        try {
-            return (new JSONObject(getValueFromLockObject(map, TABLE_LOCK_COLUMN_SERIAL_NUMBER))).get(TABLE_SERIAL_NUMBER_COLUMN_SERIAL_NUMBER).toString();
-        } catch (JSONException e) {
-            Log.e("Utilities", e.getMessage());
-            return null;
-        }
     }
 
     public static String readSharedPreferenceObject(Context context, String object, String default_value) {
@@ -342,16 +260,15 @@ public class Utilities {
             for (int i = 0; i < user_locks.size(); i++) {
 
                 final List<UserLock> mUserLockList = new ArrayList<>();
+                final UserLock mUserLockObject = new UserLock();
 
-                final UserLock mUSerLockObject = new UserLock();
                 //because just admin locks may be exists in local but not in server
-                mUSerLockObject.setAdminStatus(true);
-                mUSerLockObject.setLockName(user_locks.get(i).getString(TABLE_USER_LOCK_COLUMN_LOCK_NAME));
+                mUserLockObject.setAdminStatus(true);
+                mUserLockObject.setLockName(user_locks.get(i).getString(TABLE_USER_LOCK_COLUMN_LOCK_NAME));
 
                 final String mSerialNumber = user_locks.get(i).getString(TABLE_LOCK_COLUMN_SERIAL_NUMBER);
 
                 DataQueryBuilder queryBuilder = DataQueryBuilder.create();
-                queryBuilder.setRelationsDepth(1);
                 StringBuilder mWhereClause = new StringBuilder();
                 mWhereClause
                         .append(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER)
@@ -363,38 +280,51 @@ public class Utilities {
 
                 queryBuilder.setWhereClause(String.valueOf(mWhereClause));
                 Backendless.Data.of(Utilities.TABLE_LOCK).find(queryBuilder, new AsyncCallback<List<Map>>() {
-                    public void handleResponse(List<Map> maps) {
+                    public void handleResponse(final List<Map> maps) {
                         if (maps.size() != 0) {
-                            mUSerLockObject.setLockPlusUser(maps.get(0).get("objectId").toString(), Backendless.UserService.CurrentUser().getObjectId());
-                            mUserLockList.add(mUSerLockObject);
+                            mUserLockObject.setLockPlusUser(maps.get(0).get("objectId").toString(), Backendless.UserService.CurrentUser().getObjectId());
 
-                            Backendless.Data.of(TABLE_LOCK).addRelation(maps.get(0),
-                                    TABLE_LOCK_COLUMN_RELATED_USERS, mUserLockList,
-                                    new AsyncCallback<Integer>() {
-                                        @Override
-                                        public void handleResponse(Integer response) {
-                                            Log.i("Utilities", response.toString());
-                                        }
+                            Backendless.Data.of(UserLock.class).save(mUserLockObject, new AsyncCallback<UserLock>() {
+                                @Override
+                                public void handleResponse(UserLock response) {
+                                    mUserLockList.add(response);
 
-                                        @Override
-                                        public void handleFault(BackendlessFault fault) {
-                                            Log.i("Utilities", fault.getMessage());
-                                        }
-                                    });
+                                    Backendless.Data.of(TABLE_LOCK).addRelation(maps.get(0),
+                                            TABLE_LOCK_COLUMN_RELATED_USERS, mUserLockList,
+                                            new AsyncCallback<Integer>() {
+                                                @Override
+                                                public void handleResponse(Integer response) {
+                                                    Log.i("Utilities", response.toString());
 
-                            Backendless.Data.of(TABLE_USERS).addRelation((Map) Backendless.UserService.CurrentUser(),
-                                    TABLE_USERS_COLUMN_RELATED_LOCKS, mUserLockList,
-                                    new AsyncCallback<Integer>() {
-                                        @Override
-                                        public void handleResponse(Integer response) {
-                                            Log.i("Utilities", response.toString());
-                                        }
+                                                    Backendless.Data.of(BackendlessUser.class).addRelation(Backendless.UserService.CurrentUser(),
+                                                            TABLE_USERS_COLUMN_RELATED_LOCKS, mUserLockList,
+                                                            new AsyncCallback<Integer>() {
+                                                                @Override
+                                                                public void handleResponse(Integer response) {
+                                                                    Log.i("Utilities", response.toString());
 
-                                        @Override
-                                        public void handleFault(BackendlessFault fault) {
-                                            Log.i("Utilities", fault.getMessage());
-                                        }
-                                    });
+                                                                    setSaveStatusTrueInLocalForALock(context, mSerialNumber);
+                                                                }
+
+                                                                @Override
+                                                                public void handleFault(BackendlessFault fault) {
+                                                                    Log.i("Utilities", fault.getMessage());
+                                                                }
+                                                            });
+                                                }
+
+                                                @Override
+                                                public void handleFault(BackendlessFault fault) {
+                                                    Log.i("Utilities", fault.getMessage());
+                                                }
+                                            });
+                                }
+
+                                @Override
+                                public void handleFault(BackendlessFault fault) {
+                                    Log.i("Utilities", fault.getMessage());
+                                }
+                            });
                         } else {
                             Log.e("Utilities", "There is no Lock with serial number : " + mSerialNumber);
                         }
@@ -410,15 +340,29 @@ public class Utilities {
         }
     }
 
-    public static void setSaveStatusTrueInLocalForAllLocks(Context context) {
+    public static void setStatusInLocalForALock(Context context, Lock lock) {
         try {
             JSONArray mLocalSavedUserLocks = new JSONArray(
                     readSharedPreferenceObject(context, "locks", "").equals("")
                             ? "[]"
                             : readSharedPreferenceObject(context, "locks", ""));
 
-            for (int i = 0; i < mLocalSavedUserLocks.length(); i++)
-                mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(TABLE_USER_LOCK_COLUMN_SAVE_STATUS, true));
+            for (int i = 0; i < mLocalSavedUserLocks.length(); i++) {
+                mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(
+                        TABLE_LOCK_COLUMN_CONNECTION_STATUS, lock.getConnectionStatus()));
+
+                mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(
+                        TABLE_LOCK_COLUMN_WIFI_STATUS, lock.getWifiStatus()));
+
+                mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(
+                        TABLE_LOCK_COLUMN_LOCK_STATUS, lock.getLockStatus()));
+
+                mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(
+                        TABLE_LOCK_COLUMN_DOOR_STATUS, lock.getDoorStatus()));
+
+                mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(
+                        TABLE_LOCK_COLUMN_BATTERY_STATUS, lock.getBatteryStatus()));
+            }
 
             setValueInSharedPreferenceObject(context, "locks", mLocalSavedUserLocks.toString());
         } catch (JSONException e) {
@@ -435,13 +379,111 @@ public class Utilities {
 
             for (int i = 0; i < mLocalSavedUserLocks.length(); i++)
                 if (new JSONObject(mLocalSavedUserLocks.get(i).toString()).getString(TABLE_LOCK_COLUMN_SERIAL_NUMBER).equals(serial_number)) {
-                    mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, true));
+                    mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(TABLE_USER_LOCK_COLUMN_SAVE_STATUS, true));
                     break;
                 }
 
             setValueInSharedPreferenceObject(context, "locks", mLocalSavedUserLocks.toString());
         } catch (JSONException e) {
             Log.e("Utilities", e.getMessage());
+        }
+    }
+
+    public static String createWhereClauseWithListOfObjectId(String related_column, String search_column, HashMap[] objects) {
+        StringBuilder mWhereClause = new StringBuilder();
+
+        for (int i = 0; i < objects.length; i++) {
+            mWhereClause.append(related_column);
+            mWhereClause.append(".");
+            mWhereClause.append(search_column);
+            mWhereClause.append("=\'");
+            mWhereClause.append(objects[i].get(search_column));
+            mWhereClause.append("\'");
+
+            if (i + 1 != objects.length)
+                mWhereClause.append(" or ");
+        }
+
+        return String.valueOf(mWhereClause);
+    }
+
+    @SuppressLint("ResourceType")
+    public static void changeConnectionStatusInView(Boolean status, ImageView image_view) {
+        if (status)
+            image_view.setImageResource(R.drawable.ic_cloud_done);
+        else
+            image_view.setImageResource(R.drawable.ic_cloud_off_black_24dp);
+    }
+
+    @SuppressLint("ResourceType")
+    public static void changeWifiStatusInView(int status, ImageView image_view) {
+        switch (status) {
+            case 1: {
+                image_view.setImageResource(R.drawable.ic_signal_cellular_0_bar_black_24dp);
+                break;
+            }
+            case 2: {
+                image_view.setImageResource(R.drawable.ic_signal_cellular_2_bar_black_24dp);
+                break;
+            }
+            case 3: {
+                image_view.setImageResource(R.drawable.ic_signal_cellular_3_bar_black_24dp);
+                break;
+
+            }
+            case 4: {
+                image_view.setImageResource(R.drawable.ic_signal_cellular_4_bar_black_24dp);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    @SuppressLint("ResourceType")
+    public static void changeBatteryStatusInView(int status, ImageView image_view) {
+        switch (status) {
+            case 1: {
+                image_view.setImageResource(R.drawable.ic_battery_20_black_24dp);
+                break;
+            }
+            case 2: {
+                image_view.setImageResource(R.drawable.ic_battery_50_black_24dp);
+                break;
+            }
+            case 3: {
+                image_view.setImageResource(R.drawable.ic_battery_80_black_24dp);
+                break;
+            }
+            case 4: {
+                image_view.setImageResource(R.drawable.ic_battery_charging_full_black_24dp);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    @SuppressLint("ResourceType")
+    public static void changeDoorStatusInView(Boolean status, ImageView image_view, TextView text_view) {
+        if (status) {
+            image_view.setImageResource(R.drawable.ic_security_green_24dp);
+            text_view.setText(R.string.door_is_close);
+        } else {
+            image_view.setImageResource(R.drawable.ic_security_black_24dp);
+            text_view.setText(R.string.door_is_open_not_secure);
+        }
+    }
+
+    public static void changeLockStatusInView(Boolean status, ImageView image_view, TextView text_view) {
+        if (status) {
+            image_view.setImageResource(R.drawable.ic_close_lock_48dp);
+            if (text_view != null)
+                text_view.setText(R.string.lock_is_secure);
+        } else {
+            image_view.setImageResource(R.drawable.ic_open_lock_48dp);
+            if (text_view != null)
+                text_view.setText(R.string.lock_is_not_secure);
         }
     }
 }

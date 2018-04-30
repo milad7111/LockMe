@@ -23,18 +23,19 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 public class LockListFragment extends Fragment {
     private LockListFragment.OnFragmentInteractionListener mListener;
-    private RecyclerView _rsv_lock_list_new;
+    private RecyclerView _rsv_lock_list;
     private LockListAdapter mLockListAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private List<JSONObject> mUserLockJsonObjectList;
+    private HashMap[] mUserLocks;
 
-    FloatingActionButton fab;
+    private FloatingActionButton fab;
 
     public LockListFragment() {
     }
@@ -46,18 +47,18 @@ public class LockListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.layout_fragment_lock_list, container, false);
 
-        _rsv_lock_list_new = rootView.findViewById(R.id.rsv_lock_list_new);
+        _rsv_lock_list = rootView.findViewById(R.id.rsv_lock_list);
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
-        _rsv_lock_list_new.setHasFixedSize(true);
+        _rsv_lock_list.setHasFixedSize(true);
 
         mLayoutManager = new LinearLayoutManager(getActivity().getBaseContext());
-        _rsv_lock_list_new.setLayoutManager(mLayoutManager);
+        _rsv_lock_list.setLayoutManager(mLayoutManager);
 
         mUserLockJsonObjectList = new ArrayList<>();
         mLockListAdapter = new LockListAdapter(getActivity().getBaseContext(), mUserLockJsonObjectList, this);
-        _rsv_lock_list_new.setAdapter(mLockListAdapter);
+        _rsv_lock_list.setAdapter(mLockListAdapter);
 
         fab = rootView.findViewById(R.id.fab);
         if (fab != null) {
@@ -98,47 +99,53 @@ public class LockListFragment extends Fragment {
         showLocalLocks(Utilities.getLockFromLocal(getActivity().getBaseContext()));
         fab.setVisibility(View.VISIBLE);
 
-        ((LockActivity) getActivity()).queryBuilder = DataQueryBuilder.create();
-        ((LockActivity) getActivity()).queryBuilder.setRelationsDepth(2);
-        StringBuilder mWhereClause = new StringBuilder();
-        mWhereClause.append(Utilities.TABLE_USER_LOCK_COLUMN_USER);
-        mWhereClause.append(".objectId=\'").append(((LockActivity) getActivity()).mCurrentUser.getObjectId()).append("\'");
-        ((LockActivity) getActivity()).queryBuilder.setWhereClause(String.valueOf(mWhereClause));
+        try {
+            mUserLocks = (HashMap[]) Backendless.UserService.CurrentUser().getProperty("related_locks");
+            if (mUserLocks.length != 0) {
+                ((LockActivity) getActivity()).queryBuilder = DataQueryBuilder.create();
+                ((LockActivity) getActivity()).queryBuilder.setWhereClause(Utilities.createWhereClauseWithListOfObjectId(
+                        Utilities.TABLE_LOCK_COLUMN_RELATED_USERS,
+                        "objectId",
+                        mUserLocks));
+                Backendless.Data.of(Lock.class).find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Lock>>() {
+                    @Override
+                    public void handleResponse(List<Lock> response) {
+                        showServerLocks(response);
+                    }
 
-        Backendless.Data.of(Utilities.TABLE_USER_LOCK).find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Map>>() {
-            public void handleResponse(List<Map> maps) {
-                if (maps.size() == 0)
-                    showLocalLocks(Utilities.getLockFromLocal(getActivity().getBaseContext()));
-                else {
-                    showServerLocks(maps);
-                    fab.setVisibility(View.VISIBLE);
-                }
-            }
-
-            public void handleFault(BackendlessFault backendlessFault) {
-                Log.e(backendlessFault.getCode(), backendlessFault.getMessage());
-            }
-        });
+                    @Override
+                    public void handleFault(BackendlessFault fault) {
+                        Log.e(getTag(), fault.getMessage());
+                    }
+                });
+            } else
+                Log.e(getTag(), "mUserLocks size is zero.");
+        } catch (Exception e) {
+            Log.e(getTag(), e.getMessage());
+        }
     }
 
-    private void showServerLocks(List<Map> lock_list) {
-        Iterator mLockListIterator = lock_list.iterator();
+    private void showServerLocks(List<Lock> lock_list) {
+        mUserLockJsonObjectList.clear();
 
-        while (mLockListIterator.hasNext()) {
-            Map row = (Map) mLockListIterator.next();
-            JSONObject mLockLockObject = new JSONObject();
+        for (int i = 0; i < lock_list.size(); i++) {
+            JSONObject mLockObject = new JSONObject();
             try {
-                mLockLockObject.put(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS, row.get(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS));
-                mLockLockObject.put(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS, row.get(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS));
-                mLockLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME, row.get(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME));
-                mLockLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, row.get(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS));
-                mLockLockObject.put(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, row.get(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
-                mUserLockJsonObjectList.add(mLockLockObject);
+                mLockObject.put(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS, lock_list.get(i).getConnectionStatus());
+                mLockObject.put(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS, lock_list.get(i).getLockStatus());
+                //TODO ATTENTION: Two forward lines are true : if order of mUserLocks members and Retrieve Locks be the same
+                mLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME, lock_list.get(i).getLockName(i));
+                mLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, lock_list.get(i).getAdminStatus(i));
+                mLockObject.put(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, lock_list.get(0).getSerialNumber().getSerialNumber());
+                mUserLockJsonObjectList.add(mLockObject);
+
+                Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), lock_list.get(i));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-
         }
+
+        mLockListAdapter.notifyDataSetChanged();
     }
 
     private void showLocalLocks(ArrayList<JSONObject> lock_list) {
@@ -146,14 +153,14 @@ public class LockListFragment extends Fragment {
 
         while (mLockListIterator.hasNext()) {
             JSONObject row = (JSONObject) mLockListIterator.next();
-            JSONObject mLockLockObject = new JSONObject();
+            JSONObject mLockObject = new JSONObject();
             try {
-                mLockLockObject.put(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS, row.get(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS));
-                mLockLockObject.put(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS, row.get(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS));
-                mLockLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME, row.get(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME));
-                mLockLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, row.get(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS));
-                mLockLockObject.put(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, row.get(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
-                mUserLockJsonObjectList.add(mLockLockObject);
+                mLockObject.put(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS, row.get(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS));
+                mLockObject.put(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS, row.get(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS));
+                mLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME, row.get(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME));
+                mLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, row.get(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS));
+                mLockObject.put(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, row.get(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
+                mUserLockJsonObjectList.add(mLockObject);
             } catch (JSONException e) {
                 e.printStackTrace();
             }

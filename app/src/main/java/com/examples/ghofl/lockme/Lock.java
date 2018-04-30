@@ -17,7 +17,6 @@ import java.util.List;
 public class Lock {
 
     private String objectId;
-    private String serial_number;
     private Boolean lock_status;
     private Boolean door_status;
     private Boolean connection_status;
@@ -26,7 +25,7 @@ public class Lock {
     private Date created;
     private Date updated;
     private List<UserLock> related_users;
-
+    private SerialNumber serial_number;
 
     public String getObjectId() {
         return objectId;
@@ -36,11 +35,11 @@ public class Lock {
         this.objectId = objectId;
     }
 
-    public String getSerialNumber() {
+    public SerialNumber getSerialNumber() {
         return serial_number;
     }
 
-    public void setSerialNumber(String serialNumber) {
+    public void setSerialNumber(SerialNumber serialNumber) {
         this.serial_number = serialNumber;
     }
 
@@ -98,5 +97,13 @@ public class Lock {
 
     public void setUpdated(Date updated) {
         this.updated = updated;
+    }
+
+    public String getLockName(int index) {
+        return related_users.get(index).getLockName();
+    }
+
+    public Boolean getAdminStatus(int index) {
+        return related_users.get(index).getAdminStatus();
     }
 }

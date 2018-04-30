@@ -4,9 +4,9 @@ import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.DialogInterface.OnClickListener;
 import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
@@ -20,13 +20,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.AdapterView.OnItemClickListener;
 
-import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -34,18 +33,13 @@ import com.android.volley.Response.Listener;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.backendless.Backendless;
-import com.backendless.async.callback.AsyncCallback;
-import com.backendless.exceptions.BackendlessFault;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class AddLockFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
@@ -54,8 +48,8 @@ public class AddLockFragment extends Fragment {
     private static WifiManager mWifiManager;
     private static WifiReceiver mWifiReceiver;
     private static List<ScanResult> mWifiLockList;
-    private ArrayList<String> mWifiLockArrayList = new ArrayList();
-    private ArrayAdapter mWifiLockArrayAdapter;
+    private ArrayList<String> mWifiLockArrayList = new ArrayList<>();
+    private ArrayAdapter<? extends String> mWifiLockArrayAdapter;
     private Builder builder;
     private AlertDialog dialogView;
     private EditText _edt_lock_password;
@@ -109,6 +103,12 @@ public class AddLockFragment extends Fragment {
         fillAdapterLockWifi();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        mLockName = "";
+    }
+
     private void fillAdapterLockWifi() {
         if (!mWifiManager.isWifiEnabled()) {
             if (mWifiManager.setWifiEnabled(true)) {
@@ -122,7 +122,7 @@ public class AddLockFragment extends Fragment {
             mWifiManager.startScan();
         }
 
-        mWifiLockArrayAdapter = new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, mWifiLockArrayList);
+        mWifiLockArrayAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, mWifiLockArrayList);
         _lsv_lock_wifi.setAdapter(mWifiLockArrayAdapter);
         _lsv_lock_wifi.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> adapterView, View view, final int position, long id) {
@@ -142,6 +142,8 @@ public class AddLockFragment extends Fragment {
                 _edt_lock_password = dialogView.findViewById(R.id.edt_lock_password);
                 _edt_lock_name = dialogView.findViewById(R.id.edt_lock_name);
 
+                _edt_lock_name.setText(mLockName);
+
                 dialogView.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new android.view.View.OnClickListener() {
                     public void onClick(View v) {
                         wantToCloseDialog = false;
@@ -155,30 +157,16 @@ public class AddLockFragment extends Fragment {
                                 Log.i(getTag(), getString(R.string.error_wifi_initialization));
                                 _edt_lock_password.setText(null);
                             } else {
-                                List list = mWifiManager.getConfiguredNetworks();
-                                Iterator mWifiManagerConfiguredNetworks = list.iterator();
+                                List<WifiConfiguration> list = mWifiManager.getConfiguredNetworks();
+                                Iterator<WifiConfiguration> mWifiManagerConfiguredNetworks = list.iterator();
 
                                 while (mWifiManagerConfiguredNetworks.hasNext()) {
-                                    WifiConfiguration i = (WifiConfiguration) mWifiManagerConfiguredNetworks.next();
+                                    WifiConfiguration i = mWifiManagerConfiguredNetworks.next();
                                     if (i.SSID != null && i.SSID.equals(String.format("\"%s\"",
                                             mWifiLockArrayList.get(position)))) {
-                                        mWifiManager.disableNetwork(mWifiManager.getConnectionInfo().getNetworkId());
+//                                        mWifiManager.disableNetwork(mWifiManager.getConnectionInfo().getNetworkId());
                                         if (mWifiManager.enableNetwork(i.networkId, true)) {
                                             mWifiManager.saveConfiguration();
-                                            int mWaitTime = 500;
-
-                                            while (!mWifiManager.getConnectionInfo().getSSID()
-                                                    .equals(wifiConfig.SSID)) {
-                                                try {
-                                                    Thread.sleep((long) mWaitTime);
-                                                    mWaitTime += 500;
-                                                    if (mWaitTime == 10000)
-                                                        break;
-
-                                                } catch (Exception e) {
-                                                    Log.e(getTag(), e.getMessage());
-                                                }
-                                            }
 
                                             mLockName = _edt_lock_name.getText().toString();
                                             mLockSerialNumber = _edt_lock_password.getText().toString();
@@ -211,16 +199,13 @@ public class AddLockFragment extends Fragment {
             if (action != null && action.equals("android.net.wifi.SCAN_RESULTS")) {
                 mWifiLockList = mWifiManager.getScanResults();
                 mWifiLockArrayList.clear();
-                ArrayList mSavedWifiNames = Utilities.getSavedLocalWifiNames(getActivity().getBaseContext());
+                ArrayList<? extends String> mSavedWifiNames = Utilities.getSavedLocalWifiNames(getActivity().getBaseContext());
 
                 for (int i = 0; i < mWifiLockList.size(); ++i) {
                     if ((mWifiLockList.get(i)).SSID.contains(getString(R.string.WIFI_PREFIX_NAME)) &&
                             !mSavedWifiNames.contains((mWifiLockList.get(i)).SSID)) {
                         mWifiLockArrayList.add((mWifiLockList.get(i)).SSID);
                     }
-                    ///////////////////////////////
-//                    mWifiLockArrayList.add((mWifiLockList.get(i)).SSID);
-                    //////////////////////////////
                 }
 
                 _prg_wifi_lock_list.setVisibility(View.GONE);
@@ -277,44 +262,11 @@ public class AddLockFragment extends Fragment {
             @Override
             public void onResponse(Object response) {
                 Log.i(getTag(), response.toString());
-
                 saveLockToLocal(false);
-
-                StringBuilder mUniqueLock = new StringBuilder();
-                mUniqueLock.append(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER);
-                mUniqueLock.append("=\'").append(mLockSerialNumber).append("\'");
-                ((LockActivity) getActivity()).queryBuilder.setWhereClause(String.valueOf(mUniqueLock));
-                Backendless.Data.of(Utilities.TABLE_LOCK).find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Map>>() {
-                    public void handleResponse(List<Map> maps) {
-                        if (maps.size() != 0) {
-                            HashMap mUserLock = new HashMap();
-
-                            mUserLock.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, true);
-                            mUserLock.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME, mLockName);
-                            mUserLock.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK, maps.get(0));
-                            mUserLock.put(Utilities.TABLE_USER_LOCK_COLUMN_USER, Backendless.UserService.CurrentUser());
-
-                            Backendless.Data.of(Utilities.TABLE_USER_LOCK).save(mUserLock, new AsyncCallback<Map>() {
-                                public void handleResponse(Map response) {
-                                    Utilities.setSaveStatusTrueInLocalForALock(getActivity().getBaseContext(), mLockSerialNumber);
-                                }
-
-                                public void handleFault(BackendlessFault backendlessFault) {
-                                    Log.e(getTag(), backendlessFault.getMessage());
-                                }
-                            });
-                        }
-
-                    }
-
-                    public void handleFault(BackendlessFault backendlessFault) {
-                        Log.e(getTag(), backendlessFault.getMessage());
-                    }
-                });
             }
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {
-                Log.e(getTag(), error.getMessage());
+                Log.e(getTag(), error.toString());
                 _prg_wifi_lock_list.setVisibility(View.GONE);
 
                 Utilities.showSnackBarMessage(getView(), getString(R.string.lock_wifi_strength_is_low), Snackbar.LENGTH_INDEFINITE);

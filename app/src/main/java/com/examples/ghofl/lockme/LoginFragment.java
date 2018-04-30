@@ -5,17 +5,17 @@ import android.content.DialogInterface;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.ProgressBar;
 
 import com.android.volley.Request;
@@ -29,8 +29,8 @@ import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
 
 public class LoginFragment extends Fragment {
-    private EditText _edt_mail;
-    private EditText _edt_login_password;
+    private TextInputEditText _edt_mail;
+    private TextInputEditText _edt_login_password;
     private CheckBox _chbx_remember;
     private Button _btn_login;
     private Button _btn_skip_login;
@@ -141,7 +141,6 @@ public class LoginFragment extends Fragment {
             @Override
             public void onResponse(Object response) {
                 Log.e(getTag(), response.toString());
-                Log.e(getTag(), getString(R.string.log_connected_to_internet));
             }
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {

@@ -48,23 +48,27 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
         boolean connection_status = false;
         boolean lock_status = false;
         String lock_name = "my_lock";
-        boolean admin_status = true;
+        Boolean admin_status = true;
         try {
             connection_status = mData.get(position).getBoolean(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS);
             lock_status = mData.get(position).getBoolean(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS);
             admin_status = mData.get(position).getBoolean(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS);
             lock_name = mData.get(position).getString(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME);
-
         } catch (JSONException e) {
             Log.e("LockListAdapter", e.getMessage());
         }
 
-        holder._img_connection_status_list.setImageResource((connection_status) ? R.drawable.ic_cloud_done : R.drawable.ic_cloud_off_black_24dp);
-        holder._img_connection_status_list.setColorFilter((connection_status) ? android.R.color.holo_green_dark : android.R.color.holo_red_dark);
+        Utilities.changeLockStatusInView(
+                lock_status,
+                holder._img_lock_status_list,
+                null);
+
+        Utilities.changeConnectionStatusInView(
+                connection_status,
+                holder._img_connection_status_list);
+
         holder._txv_lock_name.setText(lock_name);
         holder._txv_is_admin.setText((admin_status) ? "you are admin" : "member");
-        holder._img_lock_status_list.setImageResource((lock_status) ? R.drawable.ic_close_lock_48dp : R.drawable.ic_open_lock_48dp);
-        holder._img_lock_status_list.setColorFilter((lock_status) ? android.R.color.holo_green_dark : android.R.color.holo_red_dark);
     }
 
     @Override
@@ -72,7 +76,6 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
         return mData.size();
     }
 
-    // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         ImageView _img_connection_status_list;
