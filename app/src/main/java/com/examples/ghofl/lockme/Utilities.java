@@ -43,8 +43,10 @@ public class Utilities {
     public static final String TABLE_USERS_COLUMN_EMAIL = "email";
     public static final String TABLE_USERS_COLUMN_MOBILE_NUMBER = "mobile_number";
     public static final String TABLE_USERS_COLUMN_PASSWORD = "password";
+    public static final String TABLE_USERS_COLUMN_RELATED_LOCKS = "related_locks";
 
     public static final String TABLE_LOCK = "Lock";
+    public static final String TABLE_LOCK_COLUMN_RELATED_USERS = "related_users";
     public static final String TABLE_LOCK_COLUMN_BATTERY_STATUS = "battery_charge";
     public static final String TABLE_LOCK_COLUMN_CONNECTION_STATUS = "connection_status";
     public static final String TABLE_LOCK_COLUMN_LOCK_SSID = "lock_ssid";
@@ -335,16 +337,16 @@ public class Utilities {
     }
 
     public static void saveMultiUserLocksInServer(final Context context, final ArrayList<JSONObject> user_locks) {
-        Map mUserLockMap = new HashMap();
 
         try {
             for (int i = 0; i < user_locks.size(); i++) {
-                final Map<String, Object> mUserLockMapObject = new HashMap<>();
 
-                mUserLockMapObject.put(TABLE_USER_LOCK_COLUMN_LOCK_NAME, user_locks.get(i).getString(TABLE_USER_LOCK_COLUMN_LOCK_NAME));
+                final List<UserLock> mUserLockList = new ArrayList<>();
+
+                final UserLock mUSerLockObject = new UserLock();
                 //because just admin locks may be exists in local but not in server
-                mUserLockMapObject.put(TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, true);
-                mUserLockMapObject.put(TABLE_USER_LOCK_COLUMN_USER, Backendless.UserService.CurrentUser());
+                mUSerLockObject.setAdminStatus(true);
+                mUSerLockObject.setLockName(user_locks.get(i).getString(TABLE_USER_LOCK_COLUMN_LOCK_NAME));
 
                 final String mSerialNumber = user_locks.get(i).getString(TABLE_LOCK_COLUMN_SERIAL_NUMBER);
 
@@ -363,26 +365,36 @@ public class Utilities {
                 Backendless.Data.of(Utilities.TABLE_LOCK).find(queryBuilder, new AsyncCallback<List<Map>>() {
                     public void handleResponse(List<Map> maps) {
                         if (maps.size() != 0) {
+                            mUSerLockObject.setLockPlusUser(maps.get(0).get("objectId").toString(), Backendless.UserService.CurrentUser().getObjectId());
+                            mUserLockList.add(mUSerLockObject);
 
-                            mUserLockMapObject.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK, maps.get(0));
-                            mUserLockMapObject.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_PLUS_USER,
-                                    String.format("%s%s", Backendless.UserService.CurrentUser().getObjectId(), maps.get(0).get("objectId")));
+                            Backendless.Data.of(TABLE_LOCK).addRelation(maps.get(0),
+                                    TABLE_LOCK_COLUMN_RELATED_USERS, mUserLockList,
+                                    new AsyncCallback<Integer>() {
+                                        @Override
+                                        public void handleResponse(Integer response) {
+                                            Log.i("Utilities", response.toString());
+                                        }
 
-                            Backendless.Data.of(Utilities.TABLE_USER_LOCK).save(mUserLockMapObject, new AsyncCallback<Map>() {
-                                @Override
-                                public void handleResponse(Map response) {
-                                    Log.i(this.getClass().getName().toString(), response.toString());
-                                    //I assume all user locks saved on server in right way
-                                    setSaveStatusTrueInLocalForAllLocks(context);
-                                }
+                                        @Override
+                                        public void handleFault(BackendlessFault fault) {
+                                            Log.i("Utilities", fault.getMessage());
+                                        }
+                                    });
 
-                                @Override
-                                public void handleFault(BackendlessFault fault) {
-                                    Log.e(this.getClass().getName().toString(), fault.getMessage());
-                                }
-                            });
+                            Backendless.Data.of(TABLE_USERS).addRelation((Map) Backendless.UserService.CurrentUser(),
+                                    TABLE_USERS_COLUMN_RELATED_LOCKS, mUserLockList,
+                                    new AsyncCallback<Integer>() {
+                                        @Override
+                                        public void handleResponse(Integer response) {
+                                            Log.i("Utilities", response.toString());
+                                        }
 
-
+                                        @Override
+                                        public void handleFault(BackendlessFault fault) {
+                                            Log.i("Utilities", fault.getMessage());
+                                        }
+                                    });
                         } else {
                             Log.e("Utilities", "There is no Lock with serial number : " + mSerialNumber);
                         }

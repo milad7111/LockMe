@@ -25,7 +25,6 @@ import com.backendless.messaging.SubscriptionOptions;
 import com.backendless.persistence.DataQueryBuilder;
 
 import java.util.List;
-import java.util.Map;
 
 public class LockActivity extends AppCompatActivity {
     public DataQueryBuilder queryBuilder;
@@ -53,27 +52,27 @@ public class LockActivity extends AppCompatActivity {
 
     private void checkExistSavedLock() {
         if (Utilities.getLockFromLocal(getBaseContext()).size() > 0)
-            LoadFragment(new LockListFragmentNew(), getString(R.string.fragment_lock_list_fragment));
+            LoadFragment(new LockListFragment(), getString(R.string.fragment_lock_list_fragment));
         else {
-            queryBuilder = DataQueryBuilder.create();
-            queryBuilder.setRelationsDepth(2);
-            StringBuilder mWhereClause = new StringBuilder();
-            mWhereClause.append(Utilities.TABLE_USER_LOCK_COLUMN_USER);
-            mWhereClause.append(".objectId=\'").append(mCurrentUser != null ? mCurrentUser.getObjectId() : null).append("\'");
-            queryBuilder.setWhereClause(String.valueOf(mWhereClause));
-            Backendless.Data.of(Utilities.TABLE_USER_LOCK).find(queryBuilder, new AsyncCallback<List<Map>>() {
-                public void handleResponse(List<Map> maps) {
-                    if (maps.size() != 0) {
-                        LoadFragment(new LockListFragmentNew(), getString(R.string.fragment_lock_list_fragment));
-                        Utilities.syncDataBetweenLocalAndServer(getBaseContext());
-                    } else
-                        LoadFragment(new NoLockFragment(), getString(R.string.fragment_no_lock_fragment));
-                }
-
-                public void handleFault(BackendlessFault backendlessFault) {
-                    Log.e(backendlessFault.getCode(), backendlessFault.getMessage());
-                }
-            });
+//            queryBuilder = DataQueryBuilder.create();
+//            queryBuilder.setRelationsDepth(1);
+//            StringBuilder mWhereClause = new StringBuilder();
+//            mWhereClause.append(Utilities.TABLE_USER_LOCK_COLUMN_USER);
+//            mWhereClause.append(".objectId=\'").append(mCurrentUser != null ? mCurrentUser.getObjectId() : null).append("\'");
+//            queryBuilder.setWhereClause(String.valueOf(mWhereClause));
+//            Backendless.Data.of(Utilities.TABLE_USER_LOCK).find(queryBuilder, new AsyncCallback<List<Map>>() {
+//                public void handleResponse(List<Map> maps) {
+//                    if (maps.size() != 0) {
+//                        LoadFragment(new LockListFragmentNew(), getString(R.string.fragment_lock_list_fragment));
+//                        Utilities.syncDataBetweenLocalAndServer(getBaseContext());
+//                    } else
+//                        LoadFragment(new NoLockFragment(), getString(R.string.fragment_no_lock_fragment));
+//                }
+//
+//                public void handleFault(BackendlessFault backendlessFault) {
+//                    Log.e(backendlessFault.getCode(), backendlessFault.getMessage());
+//                }
+//            });
         }
     }
 

@@ -14,7 +14,7 @@ import java.util.List;
  * Created by family on 4/24/2018.
  */
 
-public class LockClass {
+public class Lock {
 
     private String objectId;
     private String serial_number;
@@ -23,10 +23,9 @@ public class LockClass {
     private Boolean connection_status;
     private Integer battery_status;
     private Integer wifi_status;
-    private Integer user;
     private Date created;
     private Date updated;
-//    private List<UserLockClass> userLocks;
+    private List<UserLock> related_users;
 
 
     public String getObjectId() {
@@ -85,14 +84,6 @@ public class LockClass {
         this.wifi_status = wifiStatus;
     }
 
-    public Integer getUser() {
-        return user;
-    }
-
-    public void setUser(Integer user) {
-        this.user = user;
-    }
-
     public Date getCreated() {
         return created;
     }
@@ -108,19 +99,4 @@ public class LockClass {
     public void setUpdated(Date updated) {
         this.updated = updated;
     }
-
-//    public void addUserLock(UserLockClass userlock) {
-//        if (userLocks == null)
-//            userLocks = new ArrayList<UserLockClass>();
-//
-//        userLocks.add(userlock);
-//    }
-
-//    public List<UserLockClass> getUserLocks() {
-//        return userLocks;
-//    }
-
-//    public void setUserLocks(List<UserLockClass> userLocks) {
-//        this.userLocks = userLocks;
-//    }
 }

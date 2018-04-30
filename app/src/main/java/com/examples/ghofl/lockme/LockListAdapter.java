@@ -39,7 +39,7 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
 
     @Override
     public LockListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = mInflater.inflate(R.layout.item_lock_list_new, parent, false);
+        View view = mInflater.inflate(R.layout.item_lock_list, parent, false);
         return new ViewHolder(view);
     }
 

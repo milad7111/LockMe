@@ -12,15 +12,12 @@ import com.backendless.exceptions.BackendlessFault;
  * Created by family on 4/24/2018.
  */
 
-public class UserLockClass {
+public class UserLock {
 
-    Context mContext;
     String objectId = null;
     String lock_plus_user = null;
     String lock_name = null;
     Boolean admin_status = false;
-    LockClass lock = new LockClass();
-    BackendlessUser user = Backendless.UserService.CurrentUser();
 
     public String getObjectId() {
         return objectId;
@@ -34,8 +31,8 @@ public class UserLockClass {
         return lock_plus_user;
     }
 
-    public void setLockPlusUser() {
-        this.lock_plus_user = lock.getObjectId() + user.getObjectId();
+    public void setLockPlusUser(String lock_object_id, String user_object_id) {
+        this.lock_plus_user = lock_object_id + user_object_id;
     }
 
     public String getLockName() {
@@ -52,21 +49,5 @@ public class UserLockClass {
 
     public void setAdminStatus(Boolean adminStatus) {
         this.admin_status = adminStatus;
-    }
-
-    public LockClass getLock() {
-        return lock;
-    }
-
-    public void setLock(LockClass lock) {
-        this.lock = lock;
-    }
-
-    public BackendlessUser getUser() {
-        return user;
-    }
-
-    public void setUser(BackendlessUser user) {
-        this.user = user;
     }
 }
