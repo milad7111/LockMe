@@ -228,14 +228,16 @@ public class Utilities {
         }
     }
 
-    public static void showSnackBarMessage(View view, String message, int duration) {
+    public static Snackbar showSnackBarMessage(View view, String message, int duration) {
         final Snackbar mSnackBar = Snackbar.make(view, message, duration);
         mSnackBar.setAction(R.string.dialog_button_confirm, new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mSnackBar.dismiss();
             }
-        }).show();
+        });
+
+        return mSnackBar;
     }
 
     private static ArrayList<JSONObject> checkExistenceUnsavedLocalLocksInServer(ArrayList<JSONObject> local_locks) {

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -14,6 +15,12 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.backendless.Backendless;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
@@ -34,6 +41,7 @@ public class LockListFragment extends Fragment {
     private RecyclerView.LayoutManager mLayoutManager;
     private List<JSONObject> mUserLockJsonObjectList;
     private HashMap[] mUserLocks;
+    private Snackbar mSyncingSnackBar;
 
     private FloatingActionButton fab;
 
@@ -92,10 +100,12 @@ public class LockListFragment extends Fragment {
 
     public void onStart() {
         super.onStart();
+        checkInternetConnection();
         getAllSavedLock();
     }
 
     private void getAllSavedLock() {
+        mUserLockJsonObjectList.clear();
         showLocalLocks(Utilities.getLockFromLocal(getActivity().getBaseContext()));
         fab.setVisibility(View.VISIBLE);
 
@@ -110,6 +120,12 @@ public class LockListFragment extends Fragment {
                 Backendless.Data.of(Lock.class).find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Lock>>() {
                     @Override
                     public void handleResponse(List<Lock> response) {
+                        try {
+                            mSyncingSnackBar.dismiss();
+                        } catch (Exception e) {
+                            Log.e(getTag(), e.getMessage());
+                        }
+
                         showServerLocks(response);
                     }
 
@@ -169,6 +185,38 @@ public class LockListFragment extends Fragment {
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Uri var1);
+    }
+
+    private void checkInternetConnection() {
+        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
+        String url = getString(R.string.backendless_base_http_url);
+        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+            @Override
+            public void onResponse(Object response) {
+                Log.e(getTag(), response.toString());
+
+                mSyncingSnackBar = Utilities.showSnackBarMessage(getView(), "Syncing ...", Snackbar.LENGTH_INDEFINITE);
+                mSyncingSnackBar.show();
+
+                if (Backendless.UserService.CurrentUser() == null)
+                    getActivity().finish();
+                else
+                    getAllSavedLock();
+            }
+        }, new Response.ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+                Log.e(getTag(), error.toString());
+                final Snackbar mSnackBar = Snackbar.make(getView(), "You are offline ...", Snackbar.LENGTH_INDEFINITE);
+                mSnackBar.setAction(R.string.dialog_button_try_again, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        checkInternetConnection();
+                        mSnackBar.dismiss();
+                    }
+                }).show();
+            }
+        });
+        MyRequestQueue.add(MyStringRequest);
     }
 }
 

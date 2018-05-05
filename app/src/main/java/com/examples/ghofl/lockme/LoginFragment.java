@@ -57,7 +57,6 @@ public class LoginFragment extends Fragment {
 
         readMailAndPasswordFromSharedPreference();
         initializeLoginViews();
-        setVisibilityOfSkipButtonDependsOnInternetConnection();
 
         _btn_login.setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
@@ -97,7 +96,7 @@ public class LoginFragment extends Fragment {
                                     }
                                     //endregion Hide keyboard
 
-                                    Utilities.showSnackBarMessage(getView(), fault.getMessage(), Snackbar.LENGTH_INDEFINITE);
+                                    Utilities.showSnackBarMessage(getView(), fault.getMessage(), Snackbar.LENGTH_INDEFINITE).show();
 
                                 } else
                                     requestConnectToNetworkOrDataMobile();
@@ -120,6 +119,7 @@ public class LoginFragment extends Fragment {
 
     public void onStart() {
         super.onStart();
+        setVisibilityOfSkipButtonDependsOnInternetConnection();
         readMailAndPasswordFromSharedPreference();
         initializeLoginViews();
     }
@@ -141,6 +141,7 @@ public class LoginFragment extends Fragment {
             @Override
             public void onResponse(Object response) {
                 Log.e(getTag(), response.toString());
+                _btn_skip_login.setVisibility(View.INVISIBLE);
             }
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {

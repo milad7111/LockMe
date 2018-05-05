@@ -5,6 +5,7 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,6 +13,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import com.backendless.Backendless;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -94,24 +103,7 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    try {
-                        Bundle mLockInfoFragmentBundle = new Bundle();
-                        mLockInfoFragmentBundle.putString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER
-                                , mData.get(getAdapterPosition()).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
-                        LockInfoFragment mLockInfoFragment = new LockInfoFragment();
-                        mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
-
-                        FragmentManager mFragmentManager = mFragment.getFragmentManager();
-                        FragmentTransaction mFragmentTransaction = mFragmentManager.beginTransaction();
-                        mFragmentTransaction.replace(R.id.frml_lock_fragments, mLockInfoFragment,
-                                mContext.getString(R.string.fragment_lock_info_fragment));
-
-                        mFragmentTransaction.addToBackStack(mContext.getString(R.string.fragment_lock_info_fragment));
-                        mFragmentTransaction.commit();
-
-                    } catch (JSONException e) {
-                        Log.e("LockListAdapter", e.getMessage());
-                    }
+                    checkInternetConnection(getAdapterPosition());
                 }
             });
         }
@@ -135,4 +127,90 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
         void onItemClick(View view, int position);
     }
 
+    private void checkInternetConnection(final int position) {
+        RequestQueue MyRequestQueue = Volley.newRequestQueue(mContext);
+        String url = mContext.getString(R.string.backendless_base_http_url);
+        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+            @Override
+            public void onResponse(Object response) {
+                Log.e(this.getClass().getName(), response.toString());
+
+                try {
+                    Bundle mLockInfoFragmentBundle = new Bundle();
+                    mLockInfoFragmentBundle.putString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER
+                            , mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
+                    LockInfoFragment mLockInfoFragment = new LockInfoFragment();
+                    mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
+
+                    FragmentManager mFragmentManager = mFragment.getFragmentManager();
+                    FragmentTransaction mFragmentTransaction = mFragmentManager.beginTransaction();
+                    mFragmentTransaction.replace(R.id.frml_lock_fragments, mLockInfoFragment,
+                            mContext.getString(R.string.fragment_lock_info_fragment));
+
+                    mFragmentTransaction.addToBackStack(mContext.getString(R.string.fragment_lock_info_fragment));
+                    mFragmentTransaction.commit();
+
+                } catch (JSONException e) {
+                    Log.e(this.getClass().getName(), e.getMessage());
+                }
+
+//                mSyncingSnackBar = Utilities.showSnackBarMessage(getView(), "Syncing ...", Snackbar.LENGTH_INDEFINITE);
+//                mSyncingSnackBar.show();
+//
+//                if (Backendless.UserService.CurrentUser() == null)
+//                    getActivity().finish();
+//                else
+//                    getAllSavedLock();
+            }
+        }, new Response.ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+                Log.e(this.getClass().getName(), error.toString());
+                checkDirectConnection(position);
+            }
+        });
+        MyRequestQueue.add(MyStringRequest);
+    }
+
+    private void checkDirectConnection(final int position) {
+        RequestQueue MyRequestQueue = Volley.newRequestQueue(mContext);
+        String url = mContext.getString(R.string.esp_http_address_check);
+        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+            @Override
+            public void onResponse(Object response) {
+                Log.e(this.getClass().getName(), response.toString());
+
+                try {
+                    Bundle mLockInfoFragmentBundle = new Bundle();
+                    mLockInfoFragmentBundle.putString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER
+                            , mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
+                    LockInfoFragment mLockInfoFragment = new LockInfoFragment();
+                    mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
+
+                    FragmentManager mFragmentManager = mFragment.getFragmentManager();
+                    FragmentTransaction mFragmentTransaction = mFragmentManager.beginTransaction();
+                    mFragmentTransaction.replace(R.id.frml_lock_fragments, mLockInfoFragment,
+                            mContext.getString(R.string.fragment_lock_info_fragment));
+
+                    mFragmentTransaction.addToBackStack(mContext.getString(R.string.fragment_lock_info_fragment));
+                    mFragmentTransaction.commit();
+
+                } catch (JSONException e) {
+                    Log.e(this.getClass().getName(), e.getMessage());
+                }
+            }
+        }, new Response.ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+                Log.e(this.getClass().getName(), error.toString());
+                final Snackbar mSnackBar = Snackbar.make(mFragment.getView(), "You are not connected neither to lock nor to internet.", Snackbar.LENGTH_INDEFINITE);
+                mSnackBar.setAction(R.string.dialog_button_try_again, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        checkInternetConnection(position);
+                        mSnackBar.dismiss();
+                    }
+                }).show();
+            }
+        });
+        MyRequestQueue.add(MyStringRequest);
+    }
 }

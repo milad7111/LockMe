@@ -148,7 +148,7 @@ public class ConnectLockToInternetFragment extends Fragment {
         String url = getString(R.string.esp_http_address_connect);
         StringRequest MyStringRequest = new StringRequest(Request.Method.POST, url, new Listener() {
             public void onResponse(Object response) {
-                Utilities.showSnackBarMessage(getView(), response.toString(), Snackbar.LENGTH_INDEFINITE);
+                Utilities.showSnackBarMessage(getView(), response.toString(), Snackbar.LENGTH_INDEFINITE).show();
             }
         }, new ErrorListener() {
             public void onErrorResponse(VolleyError error) {

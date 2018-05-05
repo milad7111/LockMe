@@ -44,7 +44,7 @@ public class RegisterFragment extends Fragment {
         _btn_register.setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
                 if (!_edt_register_password.getText().toString().equals(_edt_repeat_password.getText().toString()))
-                    Utilities.showSnackBarMessage(getView(), getString(R.string.toast_password_not_match), Snackbar.LENGTH_LONG);
+                    Utilities.showSnackBarMessage(getView(), getString(R.string.toast_password_not_match), Snackbar.LENGTH_LONG).show();
                 else {
                     BackendlessUser user = new BackendlessUser();
                     user.setEmail(_edt_register_mail.getText().toString());
@@ -61,7 +61,7 @@ public class RegisterFragment extends Fragment {
                         public void handleResponse(Object response) {
                             _prg_register.setVisibility(View.INVISIBLE);
 
-                            Utilities.showSnackBarMessage(getView(), getString(R.string.toast_user_registered), Snackbar.LENGTH_LONG);
+                            Utilities.showSnackBarMessage(getView(), getString(R.string.toast_user_registered), Snackbar.LENGTH_LONG).show();
                             ((MainActivity) getActivity()).switchTab(0, _edt_register_mail.getText().toString());
 
                             _edt_register_mail.setText(null);

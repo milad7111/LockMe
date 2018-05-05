@@ -99,5 +99,6 @@
     <string name="lock_wifi_strength_is_low">Lock Wifi strength is low, try again.</string>
     <string name="direct_command_open">open</string>
     <string name="direct_command_close">close</string>
+    <string name="dialog_button_try_again">Try Again</string>
 </resources>
 

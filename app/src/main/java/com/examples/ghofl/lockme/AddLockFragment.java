@@ -269,7 +269,7 @@ public class AddLockFragment extends Fragment {
                 Log.e(getTag(), error.toString());
                 _prg_wifi_lock_list.setVisibility(View.GONE);
 
-                Utilities.showSnackBarMessage(getView(), getString(R.string.lock_wifi_strength_is_low), Snackbar.LENGTH_INDEFINITE);
+                Utilities.showSnackBarMessage(getView(), getString(R.string.lock_wifi_strength_is_low), Snackbar.LENGTH_INDEFINITE).show();
             }
         });
 

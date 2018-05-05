@@ -13,6 +13,12 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.backendless.Backendless;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
@@ -87,7 +93,7 @@ public class LockInfoFragment extends Fragment {
                             public void handleFault(BackendlessFault backendlessFault) {
                                 Log.e(getTag(), backendlessFault.getMessage());
 
-                                Utilities.showSnackBarMessage(getView(), backendlessFault.getMessage(), Snackbar.LENGTH_INDEFINITE);
+                                Utilities.showSnackBarMessage(getView(), backendlessFault.getMessage(), Snackbar.LENGTH_INDEFINITE).show();
                             }
                         });
             }
