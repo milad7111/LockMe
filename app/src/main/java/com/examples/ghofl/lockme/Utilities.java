@@ -479,5 +479,12 @@ public class Utilities {
                 text_view.setText(R.string.lock_is_not_secure);
         }
     }
+
+    public static Boolean checkConnectToAnyLockWifi(Context context) {
+        WifiManager mWifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        if (mWifiManager.getConnectionInfo().toString().contains("Lock Wifi"))
+            return true;
+        return false;
+    }
 }
 

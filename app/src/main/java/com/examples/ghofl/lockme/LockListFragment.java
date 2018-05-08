@@ -207,18 +207,19 @@ public class LockListFragment extends Fragment {
             public void onErrorResponse(VolleyError error) {
                 Log.e(getTag(), error.toString());
 
-                try {
-                    final Snackbar mSnackBar = Snackbar.make(getView(), "You are offline ...", Snackbar.LENGTH_INDEFINITE);
-                    mSnackBar.setAction(R.string.dialog_button_try_again, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            checkInternetConnection();
-                            mSnackBar.dismiss();
-                        }
-                    }).show();
-                } catch (Exception e) {
-                    Log.e(getTag(), e.getMessage());
-                }
+                if (!Utilities.checkConnectToAnyLockWifi(getActivity().getBaseContext()))
+                    try {
+                        final Snackbar mSnackBar = Snackbar.make(getView(), "You are offline ...", Snackbar.LENGTH_INDEFINITE);
+                        mSnackBar.setAction(R.string.dialog_button_try_again, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                checkInternetConnection();
+                                mSnackBar.dismiss();
+                            }
+                        }).show();
+                    } catch (Exception e) {
+                        Log.e(getTag(), e.getMessage());
+                    }
             }
         });
         MyRequestQueue.add(MyStringRequest);
