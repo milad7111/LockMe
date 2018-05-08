@@ -5,6 +5,7 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.icu.util.UniversalTimeScale;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -51,6 +52,7 @@ public class LockInfoFragment extends Fragment {
 
     private String mLockSerialNumber;
     private Boolean mLockConnectionStatus;
+    private Boolean mLockStatus;
 
     public LockInfoFragment() {
     }
@@ -142,8 +144,9 @@ public class LockInfoFragment extends Fragment {
 
             if (mLockObjectJSONObject != null)
                 try {
+                    mLockStatus = mLockObjectJSONObject.getBoolean(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS);
                     Utilities.changeLockStatusInView(
-                            mLockObjectJSONObject.getBoolean(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS),
+                            mLockStatus,
                             _img_lock_status,
                             _txv_lock_status);
 
@@ -178,8 +181,10 @@ public class LockInfoFragment extends Fragment {
             Backendless.Data.of(Lock.class).find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Lock>>() {
                 public void handleResponse(List<Lock> locks) {
                     if (locks.size() != 0) {
+
+                        mLockStatus = locks.get(0).getLockStatus();
                         Utilities.changeLockStatusInView(
-                                locks.get(0).getLockStatus(),
+                                mLockStatus,
                                 _img_lock_status,
                                 _txv_lock_status);
 
@@ -222,13 +227,19 @@ public class LockInfoFragment extends Fragment {
             public void onResponse(Object response) {
 
                 Log.e(this.getClass().getName(), response.toString());
-                requestDirectToggle();
 
+                try {
+                    JSONObject mLockInfo = new JSONObject(response.toString());
+                    if (mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS) != mLockStatus)
+                        requestDirectToggle();
+                } catch (JSONException e) {
+                    Log.e(getTag(), e.getMessage());
+                }
             }
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {
 
-                Log.e(this.getClass().getName(), error.toString());
+                Log.e(getTag(), error.toString());
 
                 requestOnlineToggle();
             }
