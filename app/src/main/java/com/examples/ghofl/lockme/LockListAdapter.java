@@ -165,7 +165,17 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {
                 Log.e(this.getClass().getName(), error.toString());
-                checkDirectConnection(position);
+
+                try {
+                    if (Utilities.getLockFromLocalWithSerialNumber(mContext,
+                            mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
+                            .getBoolean(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS))
+                        checkDirectConnection(position);
+                    else
+                        Utilities.showSnackBarMessage(mFragment.getView(), "You are not admin for this lock.", Snackbar.LENGTH_LONG).show();
+                } catch (JSONException e) {
+                    Log.e(this.getClass().getName(), e.getMessage());
+                }
             }
         });
         MyRequestQueue.add(MyStringRequest);
@@ -193,7 +203,6 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
 
                     mFragmentTransaction.addToBackStack(mContext.getString(R.string.fragment_lock_info_fragment));
                     mFragmentTransaction.commit();
-
                 } catch (JSONException e) {
                     Log.e(this.getClass().getName(), e.getMessage());
                 }
@@ -201,14 +210,19 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {
                 Log.e(this.getClass().getName(), error.toString());
-                final Snackbar mSnackBar = Snackbar.make(mFragment.getView(), "You are not connected neither to lock nor to internet.", Snackbar.LENGTH_INDEFINITE);
-                mSnackBar.setAction(R.string.dialog_button_try_again, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        checkInternetConnection(position);
-                        mSnackBar.dismiss();
-                    }
-                }).show();
+
+                try {
+                    final Snackbar mSnackBar = Snackbar.make(mFragment.getView(), "You are not connected neither to lock nor to internet.", Snackbar.LENGTH_INDEFINITE);
+                    mSnackBar.setAction(R.string.dialog_button_try_again, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            checkInternetConnection(position);
+                            mSnackBar.dismiss();
+                        }
+                    }).show();
+                } catch (Exception e) {
+                    Log.e(this.getClass().getName(), e.getMessage());
+                }
             }
         });
         MyRequestQueue.add(MyStringRequest);
