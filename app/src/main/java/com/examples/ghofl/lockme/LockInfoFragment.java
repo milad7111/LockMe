@@ -2,6 +2,8 @@ package com.examples.ghofl.lockme;
 
 
 import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
@@ -20,10 +22,13 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.backendless.Backendless;
+import com.backendless.Subscription;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
+import com.backendless.messaging.Message;
 import com.backendless.messaging.MessageStatus;
 import com.backendless.messaging.PublishOptions;
+import com.backendless.messaging.SubscriptionOptions;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,12 +50,14 @@ public class LockInfoFragment extends Fragment {
     private TextView _txv_door_status;
 
     private String mLockSerialNumber;
+    private Boolean mLockConnectionStatus;
 
     public LockInfoFragment() {
     }
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mLockConnectionStatus = false;
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -82,20 +89,15 @@ public class LockInfoFragment extends Fragment {
         _img_lock_status.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PublishOptions mPublishOptions = new PublishOptions();
-                mPublishOptions.setSubtopic("change_lock_status.1200.user_id");
-                Backendless.Messaging.publish("channel200", getString(R.string.direct_command_open),
-                        mPublishOptions, new AsyncCallback<MessageStatus>() {
-                            public void handleResponse(MessageStatus messageStatus) {
-                                Log.i(getTag(), messageStatus.toString());
-                            }
-
-                            public void handleFault(BackendlessFault backendlessFault) {
-                                Log.e(getTag(), backendlessFault.getMessage());
-
-                                Utilities.showSnackBarMessage(getView(), backendlessFault.getMessage(), Snackbar.LENGTH_INDEFINITE).show();
-                            }
-                        });
+                if (mLockConnectionStatus) {
+                    checkDirectConnection();
+                } else {
+                    try {
+                        Utilities.showSnackBarMessage(getView(), "Lock is not connected to internet.", Snackbar.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Log.e(getTag(), e.getMessage());
+                    }
+                }
             }
         });
         //endregion event image lock status click
@@ -150,8 +152,10 @@ public class LockInfoFragment extends Fragment {
                             _img_door_status,
                             _txv_door_status);
 
+                    mLockConnectionStatus = mLockObjectJSONObject.getBoolean(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS);
+
                     Utilities.changeConnectionStatusInView(
-                            mLockObjectJSONObject.getBoolean(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS),
+                            mLockConnectionStatus,
                             _img_connection_status);
 
                     Utilities.changeBatteryStatusInView(
@@ -184,8 +188,10 @@ public class LockInfoFragment extends Fragment {
                                 _img_door_status,
                                 _txv_door_status);
 
+                        mLockConnectionStatus = locks.get(0).getConnectionStatus();
+
                         Utilities.changeConnectionStatusInView(
-                                locks.get(0).getConnectionStatus(),
+                                mLockConnectionStatus,
                                 _img_connection_status);
 
                         Utilities.changeBatteryStatusInView(
@@ -206,6 +212,87 @@ public class LockInfoFragment extends Fragment {
             });
             //endregion read status from server
         }
+    }
+
+    private void checkDirectConnection() {
+        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
+        String url = getString(R.string.esp_http_address_check);
+        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+            @Override
+            public void onResponse(Object response) {
+
+                Log.e(this.getClass().getName(), response.toString());
+                requestDirectToggle();
+
+            }
+        }, new Response.ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+
+                Log.e(this.getClass().getName(), error.toString());
+
+                requestOnlineToggle();
+            }
+        });
+        MyRequestQueue.add(MyStringRequest);
+    }
+
+    private void requestDirectToggle() {
+        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
+        String url = getString(R.string.esp_http_address_toggle);
+        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+            @Override
+            public void onResponse(Object response) {
+                Log.e(this.getClass().getName(), response.toString());
+            }
+        }, new Response.ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+                Log.e(this.getClass().getName(), error.toString());
+            }
+        });
+        MyRequestQueue.add(MyStringRequest);
+    }
+
+    private void requestOnlineToggle() {
+
+        PublishOptions mPublishOptions = new PublishOptions();
+        mPublishOptions.setSubtopic(mLockSerialNumber);
+        Backendless.Messaging.publish("toggle", getString(R.string.command_toggle),
+                mPublishOptions, new AsyncCallback<MessageStatus>() {
+                    public void handleResponse(MessageStatus messageStatus) {
+                        Log.i(getTag(), messageStatus.toString());
+
+                        setAppSubscriber();
+                    }
+
+                    public void handleFault(BackendlessFault backendlessFault) {
+                        Log.e(getTag(), backendlessFault.getMessage());
+
+                        Utilities.showSnackBarMessage(getView(), backendlessFault.getMessage(), Snackbar.LENGTH_INDEFINITE).show();
+                    }
+                });
+    }
+
+    private void setAppSubscriber() {
+        SubscriptionOptions mSubscriptionOptions = new SubscriptionOptions();
+        mSubscriptionOptions.setSubtopic(mLockSerialNumber);
+        Backendless.Messaging.subscribe("response_toggle", new AsyncCallback<List<Message>>() {
+            public void handleResponse(List<Message> response) {
+                Message message = response.get(0);
+//                if (message.getData().equals("done"))
+            }
+
+            public void handleFault(BackendlessFault fault) {
+                Log.e(getTag(), fault.getMessage());
+            }
+        }, mSubscriptionOptions, new AsyncCallback<Subscription>() {
+            public void handleResponse(Subscription response) {
+                Log.e(getTag(), response.toString());
+            }
+
+            public void handleFault(BackendlessFault fault) {
+                Log.e(getTag(), fault.getMessage());
+            }
+        });
     }
 }
 

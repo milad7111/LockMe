@@ -57,6 +57,7 @@
     <string name="esp_connect">connect</string>
     <string name="esp_http_address_pure">http://192.168.4.1/</string>
     <string name="esp_http_address_check">http://192.168.4.1/check</string>
+    <string name="esp_http_address_toggle">http://192.168.4.1/toggle</string>
     <string name="esp_http_address_connect">http://192.168.4.1/connect</string>
     <string name="esp_http_address_networks">http://192.168.4.1/networks</string>
     <string name="esp_http_address_direct">http://192.168.4.1/direct</string>
@@ -97,8 +98,7 @@
     <string name="lock_is_secure">Locked</string>
     <string name="lock_is_not_secure">Opened</string>
     <string name="lock_wifi_strength_is_low">Lock Wifi strength is low, try again.</string>
-    <string name="direct_command_open">open</string>
-    <string name="direct_command_close">close</string>
+    <string name="command_toggle">toggle</string>
     <string name="dialog_button_try_again">Try Again</string>
 </resources>
 

@@ -61,28 +61,5 @@ public class LockActivity extends AppCompatActivity {
             }
         }
     }
-
-    private void setAppSubscriber() {
-        SubscriptionOptions mSubscriptionOptions = new SubscriptionOptions();
-        mSubscriptionOptions.setSubtopic("change_lock_status.1300.user_id");
-        Backendless.Messaging.subscribe("channel200", new AsyncCallback<List<Message>>() {
-            public void handleResponse(List<Message> response) {
-                Message message = response.get(0);
-//                if (message.getData().equals("done"))
-            }
-
-            public void handleFault(BackendlessFault fault) {
-                Log.e(this.getClass().getName(), fault.getMessage());
-            }
-        }, mSubscriptionOptions, new AsyncCallback<Subscription>() {
-            public void handleResponse(Subscription response) {
-                Log.e(this.getClass().getName(), response.toString());
-            }
-
-            public void handleFault(BackendlessFault fault) {
-                Log.e(this.getClass().getName(), fault.getMessage());
-            }
-        });
-    }
 }
 
