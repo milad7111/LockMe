@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
@@ -100,7 +101,7 @@ public class AddLockFragment extends Fragment {
 
     public void onStart() {
         super.onStart();
-        fillAdapterLockWifi();
+        checkWifi();
     }
 
     @Override
@@ -199,7 +200,7 @@ public class AddLockFragment extends Fragment {
             if (action != null && action.equals("android.net.wifi.SCAN_RESULTS")) {
                 mWifiLockList = mWifiManager.getScanResults();
                 mWifiLockArrayList.clear();
-                ArrayList<? extends String> mSavedWifiNames = Utilities.getSavedLocalWifiNames(getActivity().getBaseContext());
+                ArrayList<String> mSavedWifiNames = Utilities.getSavedLocalWifiNames(getActivity().getBaseContext());
 
                 for (int i = 0; i < mWifiLockList.size(); ++i) {
                     if ((mWifiLockList.get(i)).SSID.contains(getString(R.string.WIFI_PREFIX_NAME)) &&
@@ -207,6 +208,8 @@ public class AddLockFragment extends Fragment {
                         mWifiLockArrayList.add((mWifiLockList.get(i)).SSID);
                     }
                 }
+
+                tryAgain();
 
                 _prg_wifi_lock_list.setVisibility(View.GONE);
                 mWifiLockArrayAdapter.notifyDataSetChanged();
@@ -243,8 +246,8 @@ public class AddLockFragment extends Fragment {
 
             goToLockInfo();
 
-        } catch (JSONException var3) {
-            Log.e(getTag(), var3.getMessage());
+        } catch (JSONException e) {
+            Log.e(getTag(), e.getMessage());
         }
     }
 
@@ -282,5 +285,49 @@ public class AddLockFragment extends Fragment {
         LockInfoFragment mLockInfoFragment = new LockInfoFragment();
         mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
         ((LockActivity) getActivity()).LoadFragment(mLockInfoFragment, getString(R.string.fragment_lock_info_fragment));
+    }
+
+    private void checkWifi() {
+        final Snackbar mSnackBar;
+
+        if (Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
+            fillAdapterLockWifi();
+            _prg_wifi_lock_list.setVisibility(View.VISIBLE);
+        } else {
+            _prg_wifi_lock_list.setVisibility(View.GONE);
+            mSnackBar = Utilities.showSnackBarMessage(getView(), "Turn on WIFI", Snackbar.LENGTH_INDEFINITE);
+            mSnackBar.setAction(R.string.dialog_button_confirm, new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
+                    mSnackBar.dismiss();
+                    _prg_wifi_lock_list.setVisibility(View.VISIBLE);
+
+                    try {
+                        Thread.sleep(3000);
+                        _prg_wifi_lock_list.setVisibility(View.GONE);
+                    } catch (InterruptedException e) {
+                        Log.e(getTag(), e.getMessage());
+                    }
+
+                    checkWifi();
+                }
+            });
+            mSnackBar.show();
+        }
+    }
+
+    private void tryAgain() {
+        final Snackbar mSnackBar;
+
+        mSnackBar = Utilities.showSnackBarMessage(getView(), "No Lock Found.", Snackbar.LENGTH_INDEFINITE);
+        mSnackBar.setAction(R.string.dialog_button_try_again, new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                checkWifi();
+                mSnackBar.dismiss();
+            }
+        });
+        mSnackBar.show();
     }
 }

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.Fragment;
@@ -19,6 +20,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -91,11 +93,10 @@ public class LoginFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
+        setVisibilityOfSkipButtonDependsOnInternetConnection();
         if (!Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI) &&
                 !Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_MOBILE))
             requestConnectToNetworkOrDataMobile();
-        else
-            setVisibilityOfSkipButtonDependsOnInternetConnection();
     }
 
     private void setVisibilityOfSkipButtonDependsOnInternetConnection() {
