@@ -1,5 +1,7 @@
 package com.examples.ghofl.lockme;
 
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.net.ConnectivityManager;
@@ -27,6 +29,8 @@ import com.android.volley.toolbox.Volley;
 import com.backendless.Backendless;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
+
+import org.json.JSONException;
 
 public class LoginFragment extends Fragment {
     private TextInputEditText _edt_mail;
@@ -61,47 +65,7 @@ public class LoginFragment extends Fragment {
         _btn_login.setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
                 _prg_login.setVisibility(View.VISIBLE);
-                Backendless.UserService.login(
-                        _edt_mail.getText().toString(),
-                        _edt_login_password.getText().toString(), new AsyncCallback() {
-
-                            @Override
-                            public void handleResponse(Object response) {
-                                _prg_login.setVisibility(View.INVISIBLE);
-
-                                Utilities.syncDataBetweenLocalAndServer(getActivity().getBaseContext());
-                                Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_EMAIL,
-                                        _edt_mail.getText().toString());
-
-                                if (_chbx_remember.isChecked())
-                                    Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_PASSWORD, _edt_login_password.getText().toString());
-                                else
-                                    Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_PASSWORD, getString(R.string.empty_phrase));
-
-                                ((MainActivity) getActivity()).comeFromLogin();
-                            }
-
-                            @Override
-                            public void handleFault(BackendlessFault fault) {
-                                _prg_login.setVisibility(View.INVISIBLE);
-                                Log.e(getTag(), fault.getMessage());
-
-                                if (fault.getCode().equals("3003") || fault.getCode().equals("IllegalArgumentException")) {
-
-                                    //region Hide keyboard
-                                    View view = getActivity().getCurrentFocus();
-                                    if (view != null) {
-                                        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                                    }
-                                    //endregion Hide keyboard
-
-                                    Utilities.showSnackBarMessage(getView(), fault.getMessage(), Snackbar.LENGTH_INDEFINITE).show();
-
-                                } else
-                                    requestConnectToNetworkOrDataMobile();
-                            }
-                        });
+                checkInternetConnection();
             }
         });
 
@@ -200,6 +164,66 @@ public class LoginFragment extends Fragment {
                 _chbx_remember.setChecked(true);
             }
         }
+    }
+
+    private void checkInternetConnection() {
+        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
+        String url = getString(R.string.backendless_base_http_url);
+        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+            @Override
+            public void onResponse(Object response) {
+                Log.e(getTag(), response.toString());
+
+                Backendless.UserService.login(
+                        _edt_mail.getText().toString(),
+                        _edt_login_password.getText().toString(), new AsyncCallback() {
+
+                            @Override
+                            public void handleResponse(Object response) {
+                                _prg_login.setVisibility(View.INVISIBLE);
+
+                                Utilities.syncDataBetweenLocalAndServer(getActivity().getBaseContext());
+                                Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_EMAIL,
+                                        _edt_mail.getText().toString());
+
+                                if (_chbx_remember.isChecked())
+                                    Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_PASSWORD, _edt_login_password.getText().toString());
+                                else
+                                    Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_PASSWORD, getString(R.string.empty_phrase));
+
+                                ((MainActivity) getActivity()).comeFromLogin();
+                            }
+
+                            @Override
+                            public void handleFault(BackendlessFault fault) {
+                                _prg_login.setVisibility(View.INVISIBLE);
+                                Log.e(getTag(), fault.getMessage());
+
+                                if (fault.getCode().equals("3003") || fault.getCode().equals("IllegalArgumentException")) {
+
+                                    //region Hide keyboard
+                                    View view = getActivity().getCurrentFocus();
+                                    if (view != null) {
+                                        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                                    }
+                                    //endregion Hide keyboard
+
+                                    Utilities.showSnackBarMessage(getView(), fault.getMessage(), Snackbar.LENGTH_INDEFINITE).show();
+
+                                } else
+                                    requestConnectToNetworkOrDataMobile();
+                            }
+                        });
+            }
+        }, new Response.ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+                Log.e(this.getClass().getName(), error.toString());
+
+                requestConnectToNetworkOrDataMobile();
+            }
+        });
+        MyRequestQueue.add(MyStringRequest);
     }
 }
 
