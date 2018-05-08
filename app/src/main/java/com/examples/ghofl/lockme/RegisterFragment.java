@@ -1,17 +1,27 @@
 package com.examples.ghofl.lockme;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
@@ -43,6 +53,21 @@ public class RegisterFragment extends Fragment {
 
         _btn_register.setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
+                checkInternetConnection();
+            }
+        });
+
+        return rootView;
+    }
+
+    private void checkInternetConnection() {
+        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
+        String url = getString(R.string.backendless_base_http_url);
+        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+            @Override
+            public void onResponse(Object response) {
+                Log.e(getTag(), response.toString());
+
                 if (!_edt_register_password.getText().toString().equals(_edt_repeat_password.getText().toString()))
                     Utilities.showSnackBarMessage(getView(), getString(R.string.toast_password_not_match), Snackbar.LENGTH_LONG).show();
                 else {
@@ -78,9 +103,42 @@ public class RegisterFragment extends Fragment {
                     });
                 }
             }
-        });
+        }, new Response.ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+                Log.e(this.getClass().getName(), error.toString());
 
-        return rootView;
+                requestConnectToNetworkOrDataMobile();
+            }
+        });
+        MyRequestQueue.add(MyStringRequest);
+    }
+
+    private void requestConnectToNetworkOrDataMobile() {
+        AlertDialog alertDialog = new AlertDialog.Builder(getActivity()).create();
+        alertDialog.setTitle(getString(R.string.dialog_connect_network));
+        alertDialog.setMessage(getString(R.string.dialog_choose_how_to_connect_internet));
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getString(R.string.dialog_button_data),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        Utilities.setMobileDataEnabled(getActivity(), true);
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getString(R.string.dialog_button_wifi_network),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        Utilities.setWifiEnabled(getActivity(), true);
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.dialog_button_discard),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+        alertDialog.show();
     }
 }
 
