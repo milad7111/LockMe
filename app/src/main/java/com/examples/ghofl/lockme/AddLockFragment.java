@@ -60,6 +60,7 @@ public class AddLockFragment extends Fragment {
     private String mLockWifiName;
     private String mLockName;
     private String mLockSerialNumber;
+    private Snackbar mSnackBar;
 
     public AddLockFragment() {
     }
@@ -108,6 +109,13 @@ public class AddLockFragment extends Fragment {
     public void onResume() {
         super.onResume();
         mLockName = "";
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        mSnackBar.dismiss();
+        getActivity().getFragmentManager().beginTransaction().remove(this);
     }
 
     private void fillAdapterLockWifi() {
@@ -288,8 +296,6 @@ public class AddLockFragment extends Fragment {
     }
 
     private void checkWifi() {
-        final Snackbar mSnackBar;
-
         if (Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
             fillAdapterLockWifi();
             _prg_wifi_lock_list.setVisibility(View.VISIBLE);
@@ -318,10 +324,8 @@ public class AddLockFragment extends Fragment {
     }
 
     private void tryAgain() {
-        final Snackbar mSnackBar;
-
-        mSnackBar = Utilities.showSnackBarMessage(getView(), "No Lock Found.", Snackbar.LENGTH_INDEFINITE);
-        mSnackBar.setAction(R.string.dialog_button_try_again, new View.OnClickListener() {
+        mSnackBar = Utilities.showSnackBarMessage(getView(), "Find more ...", Snackbar.LENGTH_INDEFINITE);
+        mSnackBar.setAction("Try", new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 checkWifi();

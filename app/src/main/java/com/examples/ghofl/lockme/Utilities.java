@@ -480,11 +480,9 @@ public class Utilities {
         }
     }
 
-    public static Boolean checkConnectToAnyLockWifi(Context context) {
+    public static String checkConnectToAnyLockWifi(Context context) {
         WifiManager mWifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        if (mWifiManager.getConnectionInfo().toString().contains("Lock Wifi"))
-            return true;
-        return false;
+        return mWifiManager.getConnectionInfo().getSSID().toString();
     }
 }
 

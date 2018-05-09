@@ -76,7 +76,7 @@ public class LockInfoFragment extends Fragment {
         _img_door_status = rootView.findViewById(R.id.img_door_status);
         _txv_door_status = rootView.findViewById(R.id.txv_door_status);
 
-        updateImageResourceAndTexts();
+        getStatusFromDirectConnection();
 
         //region event image connection status click
         _img_connection_status.setOnClickListener(new View.OnClickListener() {
@@ -127,8 +127,7 @@ public class LockInfoFragment extends Fragment {
 
     public void onStart() {
         super.onStart();
-
-        updateImageResourceAndTexts();
+        getStatusFromDirectConnection();
     }
 
     public interface OnFragmentInteractionListener {
@@ -304,6 +303,71 @@ public class LockInfoFragment extends Fragment {
                 Log.e(getTag(), fault.getMessage());
             }
         });
+    }
+
+    private void getStatusFromDirectConnection() {
+        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
+        String url = getString(R.string.esp_http_address_check);
+        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+            @Override
+            public void onResponse(Object response) {
+
+                Log.e(getTag(), response.toString());
+
+                try {
+                    JSONObject mLockInfo = new JSONObject(response.toString());
+                    Lock mLock = new Lock();
+
+                    //region read status from lock
+                    if (mLockInfo != null)
+                        try {
+                            mLockStatus = mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS);
+                            Utilities.changeLockStatusInView(
+                                    mLockStatus,
+                                    _img_lock_status,
+                                    _txv_lock_status);
+                            mLock.setLockStatus(mLockStatus);
+
+                            Utilities.changeDoorStatusInView(
+                                    mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS),
+                                    _img_door_status,
+                                    _txv_door_status);
+                            mLock.setDoorStatus(mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS));
+
+                            mLockConnectionStatus = mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS);
+                            Utilities.changeConnectionStatusInView(
+                                    mLockConnectionStatus,
+                                    _img_connection_status);
+                            mLock.setConnectionStatus(mLockConnectionStatus);
+
+                            Utilities.changeBatteryStatusInView(
+                                    mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_BATTERY_STATUS),
+                                    _img_battery_status);
+                            mLock.setBatteryStatus(mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_BATTERY_STATUS));
+
+                            Utilities.changeWifiStatusInView(
+                                    mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS),
+                                    _img_wifi_status);
+                            mLock.setWifiStatus(mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS));
+
+                            Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), mLock);
+                        } catch (JSONException e) {
+                            Log.e(getTag(), e.getMessage());
+                        }
+                    //endregion read status from lock
+
+                } catch (JSONException e) {
+                    Log.e(getTag(), e.getMessage());
+                }
+            }
+        }, new Response.ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+
+                Log.e(getTag(), error.toString());
+                updateImageResourceAndTexts();
+            }
+        });
+        MyRequestQueue.add(MyStringRequest);
     }
 }
 

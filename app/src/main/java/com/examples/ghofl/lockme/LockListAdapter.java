@@ -4,6 +4,8 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
@@ -25,6 +27,7 @@ import com.backendless.Backendless;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -181,7 +184,40 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
         MyRequestQueue.add(MyStringRequest);
     }
 
-    private void checkDirectConnection(final int position) {
+    private void checkDirectConnection(final int position) throws JSONException {
+        if (Utilities.checkConnectToAnyLockWifi(mContext).toString().equals(
+                Utilities.getLockFromLocalWithSerialNumber(mContext, mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
+                        .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID).toString()))
+        {
+            WifiConfiguration wifiConfig = new WifiConfiguration();
+            WifiManager mWifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            wifiConfig.SSID = String.format("\"%s\"",
+                    Utilities.getLockFromLocalWithSerialNumber(mContext, mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
+                    .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID));
+
+            wifiConfig.preSharedKey = String.format("\"%s\"",  mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
+            wifiConfig.allowedKeyManagement.set(1);
+            int netId = mWifiManager.addNetwork(wifiConfig);
+            if (netId == -1) {
+                Log.i(getClass().getName(), mContext.getString(R.string.error_wifi_initialization));
+            } else {
+                List<WifiConfiguration> list = mWifiManager.getConfiguredNetworks();
+                Iterator<WifiConfiguration> mWifiManagerConfiguredNetworks = list.iterator();
+
+                while (mWifiManagerConfiguredNetworks.hasNext()) {
+                    WifiConfiguration i = mWifiManagerConfiguredNetworks.next();
+                    if (i.SSID != null && i.SSID.equals(String.format("\"%s\"",
+                            Utilities.getLockFromLocalWithSerialNumber(mContext, mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
+                                    .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID)))) {
+                        if (mWifiManager.enableNetwork(i.networkId, true)) {
+                            mWifiManager.saveConfiguration();
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
         RequestQueue MyRequestQueue = Volley.newRequestQueue(mContext);
         String url = mContext.getString(R.string.esp_http_address_check);
         StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
