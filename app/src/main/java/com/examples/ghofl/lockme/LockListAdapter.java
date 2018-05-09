@@ -185,17 +185,21 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
     }
 
     private void checkDirectConnection(final int position) throws JSONException {
-        if (Utilities.checkConnectToAnyLockWifi(mContext).toString().equals(
-                Utilities.getLockFromLocalWithSerialNumber(mContext, mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
-                        .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID).toString()))
-        {
+        String mConnectedWifiName = Utilities.checkConnectToAnyLockWifi(mContext);
+        String mWifiNameOfSelectedLock = Utilities.getLockFromLocalWithSerialNumber(
+                mContext,
+                mData.get(position)
+                        .getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
+                .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID);
+
+        if (mConnectedWifiName.equals(mWifiNameOfSelectedLock)) {
             WifiConfiguration wifiConfig = new WifiConfiguration();
             WifiManager mWifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             wifiConfig.SSID = String.format("\"%s\"",
                     Utilities.getLockFromLocalWithSerialNumber(mContext, mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
-                    .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID));
+                            .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID));
 
-            wifiConfig.preSharedKey = String.format("\"%s\"",  mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
+            wifiConfig.preSharedKey = String.format("\"%s\"", mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
             wifiConfig.allowedKeyManagement.set(1);
             int netId = mWifiManager.addNetwork(wifiConfig);
             if (netId == -1) {
