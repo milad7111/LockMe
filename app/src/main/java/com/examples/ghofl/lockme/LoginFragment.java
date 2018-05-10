@@ -85,7 +85,6 @@ public class LoginFragment extends Fragment {
 
     public void onStart() {
         super.onStart();
-        setVisibilityOfSkipButtonDependsOnInternetConnection();
         readMailAndPasswordFromSharedPreference();
         initializeLoginViews();
     }
@@ -100,25 +99,41 @@ public class LoginFragment extends Fragment {
     }
 
     private void setVisibilityOfSkipButtonDependsOnInternetConnection() {
-        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
-        String url = getString(R.string.backendless_base_http_url);
-        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
-            @Override
-            public void onResponse(Object response) {
-                Log.e(getTag(), response.toString());
-                _btn_skip_login.setVisibility(View.INVISIBLE);
-            }
-        }, new Response.ErrorListener() {
-            public void onErrorResponse(VolleyError error) {
-                if (Utilities.hasAdminLock(getActivity()))
-                    _btn_skip_login.setVisibility(View.VISIBLE);
-                else
-                    _btn_skip_login.setVisibility(View.INVISIBLE);
+        if (Utilities.hasAdminLock(getActivity()))
+            _btn_skip_login.setVisibility(View.VISIBLE);
+        else
+            _btn_skip_login.setVisibility(View.INVISIBLE);
 
-                Log.e(getTag(), error.toString());
-            }
-        });
-        MyRequestQueue.add(MyStringRequest);
+        if (!Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
+            Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
+            setVisibilityOfSkipButtonDependsOnInternetConnection();
+            Log.e(getTag(), "Wifi is off.");
+        }
+//        {
+//            RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
+//            String url = getString(R.string.backendless_base_http_url);
+//            StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+//                @Override
+//                public void onResponse(Object response) {
+//                    Log.e(getTag(), response.toString());
+//                    _btn_skip_login.setVisibility(View.INVISIBLE);
+//                }
+//            }, new Response.ErrorListener() {
+//                public void onErrorResponse(VolleyError error) {
+//            if (Utilities.hasAdminLock(getActivity()))
+//                _btn_skip_login.setVisibility(View.VISIBLE);
+//            else
+//                _btn_skip_login.setVisibility(View.INVISIBLE);
+
+//                    Log.e(getTag(), error.toString());
+//                }
+//            });
+//            MyRequestQueue.add(MyStringRequest);
+//        } else {
+//            Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
+//            setVisibilityOfSkipButtonDependsOnInternetConnection();
+//            Log.e(getTag(), "Wifi is off.");
+//        }
     }
 
     private void readMailAndPasswordFromSharedPreference() {
@@ -141,6 +156,7 @@ public class LoginFragment extends Fragment {
         alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getString(R.string.dialog_button_wifi_network),
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
+                        Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
                         Utilities.setWifiEnabled(getActivity(), true);
                         setVisibilityOfSkipButtonDependsOnInternetConnection();
                         dialog.dismiss();
@@ -168,63 +184,72 @@ public class LoginFragment extends Fragment {
     }
 
     private void checkInternetConnection() {
-        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
-        String url = getString(R.string.backendless_base_http_url);
-        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
-            @Override
-            public void onResponse(Object response) {
-                Log.e(getTag(), response.toString());
+        if (Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
+            RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
+            String url = getString(R.string.backendless_base_http_url);
+            StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+                @Override
+                public void onResponse(Object response) {
+                    Log.e(getTag(), response.toString());
 
-                Backendless.UserService.login(
-                        _edt_mail.getText().toString(),
-                        _edt_login_password.getText().toString(), new AsyncCallback() {
+                    Backendless.UserService.login(
+                            _edt_mail.getText().toString(),
+                            _edt_login_password.getText().toString(), new AsyncCallback() {
 
-                            @Override
-                            public void handleResponse(Object response) {
-                                _prg_login.setVisibility(View.INVISIBLE);
+                                @Override
+                                public void handleResponse(Object response) {
+                                    _prg_login.setVisibility(View.INVISIBLE);
 
-                                Utilities.syncDataBetweenLocalAndServer(getActivity().getBaseContext());
-                                Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_EMAIL,
-                                        _edt_mail.getText().toString());
+                                    Utilities.syncDataBetweenLocalAndServer(getActivity().getBaseContext());
+                                    Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_EMAIL,
+                                            _edt_mail.getText().toString());
 
-                                if (_chbx_remember.isChecked())
-                                    Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_PASSWORD, _edt_login_password.getText().toString());
-                                else
-                                    Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_PASSWORD, getString(R.string.empty_phrase));
+                                    if (_chbx_remember.isChecked())
+                                        Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_PASSWORD, _edt_login_password.getText().toString());
+                                    else
+                                        Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_PASSWORD, getString(R.string.empty_phrase));
 
-                                ((MainActivity) getActivity()).comeFromLogin();
-                            }
+                                    ((MainActivity) getActivity()).comeFromLogin();
+                                }
 
-                            @Override
-                            public void handleFault(BackendlessFault fault) {
-                                _prg_login.setVisibility(View.INVISIBLE);
-                                Log.e(getTag(), fault.getMessage());
+                                @Override
+                                public void handleFault(BackendlessFault fault) {
+                                    _prg_login.setVisibility(View.INVISIBLE);
+                                    Log.e(getTag(), fault.getMessage());
 
-                                if (fault.getCode().equals("3003") || fault.getCode().equals("IllegalArgumentException")) {
+                                    if (fault.getCode().equals("3003") || fault.getCode().equals("IllegalArgumentException")) {
 
-                                    //region Hide keyboard
-                                    View view = getActivity().getCurrentFocus();
-                                    if (view != null) {
-                                        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                                    }
-                                    //endregion Hide keyboard
+                                        //region Hide keyboard
+                                        View view = getActivity().getCurrentFocus();
+                                        if (view != null) {
+                                            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                                            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                                        }
+                                        //endregion Hide keyboard
 
-                                    Utilities.showSnackBarMessage(getView(), fault.getMessage(), Snackbar.LENGTH_INDEFINITE).show();
+                                        Utilities.showSnackBarMessage(getView(), fault.getMessage(), Snackbar.LENGTH_INDEFINITE).show();
 
-                                } else
-                                    requestConnectToNetworkOrDataMobile();
-                            }
-                        });
-            }
-        }, new Response.ErrorListener() {
-            public void onErrorResponse(VolleyError error) {
-                Log.e(this.getClass().getName(), error.toString());
+                                    } else
+                                        requestConnectToNetworkOrDataMobile();
+                                }
+                            });
+                }
+            }, new Response.ErrorListener() {
+                public void onErrorResponse(VolleyError error) {
+                    Log.e(getTag(), error.toString());
 
-                requestConnectToNetworkOrDataMobile();
-            }
-        });
-        MyRequestQueue.add(MyStringRequest);
+                    requestConnectToNetworkOrDataMobile();
+                }
+            });
+            MyRequestQueue.add(MyStringRequest);
+        } else {
+            Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
+            Log.e(getTag(), "Wifi is off.");
+            Utilities.showSnackBarMessage(getView(), "Wifi is off, Please wait.",
+                    Snackbar.LENGTH_LONG).show();
+            _prg_login.setVisibility(View.INVISIBLE);
+            requestConnectToNetworkOrDataMobile();
+        }
     }
 }
 

@@ -4,6 +4,7 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.net.ConnectivityManager;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -131,68 +132,74 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
     }
 
     private void checkInternetConnection(final int position) {
-        RequestQueue MyRequestQueue = Volley.newRequestQueue(mContext);
-        String url = mContext.getString(R.string.backendless_base_http_url);
-        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
-            @Override
-            public void onResponse(Object response) {
-                Log.e(this.getClass().getName(), response.toString());
+        if (Utilities.checkMobileDataOrWifiEnabled(mContext, ConnectivityManager.TYPE_WIFI)) {
+            RequestQueue MyRequestQueue = Volley.newRequestQueue(mContext);
+            String url = mContext.getString(R.string.backendless_base_http_url);
+            StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+                @Override
+                public void onResponse(Object response) {
+                    Log.e(this.getClass().getName(), response.toString());
 
-                try {
-                    Bundle mLockInfoFragmentBundle = new Bundle();
-                    mLockInfoFragmentBundle.putString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER
-                            , mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
-                    LockInfoFragment mLockInfoFragment = new LockInfoFragment();
-                    mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
+                    try {
+                        Bundle mLockInfoFragmentBundle = new Bundle();
+                        mLockInfoFragmentBundle.putString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER
+                                , mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
+                        LockInfoFragment mLockInfoFragment = new LockInfoFragment();
+                        mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
 
-                    FragmentManager mFragmentManager = mFragment.getFragmentManager();
-                    FragmentTransaction mFragmentTransaction = mFragmentManager.beginTransaction();
-                    mFragmentTransaction.replace(R.id.frml_lock_fragments, mLockInfoFragment,
-                            mContext.getString(R.string.fragment_lock_info_fragment));
+                        FragmentManager mFragmentManager = mFragment.getFragmentManager();
+                        FragmentTransaction mFragmentTransaction = mFragmentManager.beginTransaction();
+                        mFragmentTransaction.replace(R.id.frml_lock_fragments, mLockInfoFragment,
+                                mContext.getString(R.string.fragment_lock_info_fragment));
 
-                    mFragmentTransaction.addToBackStack(mContext.getString(R.string.fragment_lock_info_fragment));
-                    mFragmentTransaction.commit();
+                        mFragmentTransaction.addToBackStack(mContext.getString(R.string.fragment_lock_info_fragment));
+                        mFragmentTransaction.commit();
 
-                } catch (JSONException e) {
-                    Log.e(this.getClass().getName(), e.getMessage());
+                    } catch (JSONException e) {
+                        Log.e(this.getClass().getName(), e.getMessage());
+                    }
                 }
+            }, new Response.ErrorListener() {
+                public void onErrorResponse(VolleyError error) {
+                    Log.e(this.getClass().getName(), error.toString());
 
-//                mSyncingSnackBar = Utilities.showSnackBarMessage(getView(), "Syncing ...", Snackbar.LENGTH_INDEFINITE);
-//                mSyncingSnackBar.show();
-//
-//                if (Backendless.UserService.CurrentUser() == null)
-//                    getActivity().finish();
-//                else
-//                    getAllSavedLock();
-            }
-        }, new Response.ErrorListener() {
-            public void onErrorResponse(VolleyError error) {
-                Log.e(this.getClass().getName(), error.toString());
-
-                try {
-                    if (Utilities.getLockFromLocalWithSerialNumber(mContext,
-                            mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
-                            .getBoolean(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS))
-                        checkDirectConnection(position);
-                    else
-                        Utilities.showSnackBarMessage(mFragment.getView(), "You are not admin for this lock.", Snackbar.LENGTH_LONG).show();
-                } catch (JSONException e) {
-                    Log.e(this.getClass().getName(), e.getMessage());
+                    try {
+                        if (Utilities.getLockFromLocalWithSerialNumber(mContext,
+                                mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
+                                .getBoolean(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS))
+                            checkDirectConnection(position);
+                        else
+                            Utilities.showSnackBarMessage(mFragment.getView(), "You are not admin for this lock.",
+                                    Snackbar.LENGTH_LONG).show();
+                    } catch (JSONException e) {
+                        Log.e(this.getClass().getName(), e.getMessage());
+                    }
                 }
+            });
+            MyRequestQueue.add(MyStringRequest);
+        } else {
+            Utilities.setWifiEnabled(mContext, true);
+            Log.e(this.getClass().getName(), "Wifi is off.");
+
+            try {
+                Thread.sleep(3000);
+            } catch (Exception e) {
+                Log.e(this.getClass().getName(), e.getMessage());
             }
-        });
-        MyRequestQueue.add(MyStringRequest);
+
+            checkInternetConnection(position);
+        }
     }
 
     private void checkDirectConnection(final int position) throws JSONException {
-        String mConnectedWifiName = Utilities.checkConnectToAnyLockWifi(mContext);
+        String mConnectedWifiName = Utilities.checkConnectToAnyLockWifi(mContext).replace("\"","");
         String mWifiNameOfSelectedLock = Utilities.getLockFromLocalWithSerialNumber(
                 mContext,
                 mData.get(position)
                         .getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
                 .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID);
 
-        if (mConnectedWifiName.equals(mWifiNameOfSelectedLock)) {
+        if (!mConnectedWifiName.equals(mWifiNameOfSelectedLock)) {
             WifiConfiguration wifiConfig = new WifiConfiguration();
             WifiManager mWifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             wifiConfig.SSID = String.format("\"%s\"",
@@ -219,6 +226,12 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
                         break;
                     }
                 }
+            }
+
+            try {
+                Thread.sleep(3000);
+            } catch (Exception e) {
+                Log.e(this.getClass().getName(), e.getMessage());
             }
         }
 

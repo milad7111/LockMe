@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 
 public class LockActivity extends AppCompatActivity {
-    public DataQueryBuilder queryBuilder;
     public BackendlessUser mCurrentUser;
 
     public LockActivity() {
@@ -33,7 +32,6 @@ public class LockActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mCurrentUser = Backendless.UserService.CurrentUser();
-        queryBuilder = DataQueryBuilder.create();
         checkExistSavedLock();
     }
 

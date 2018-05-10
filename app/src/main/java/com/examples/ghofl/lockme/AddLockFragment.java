@@ -217,6 +217,7 @@ public class AddLockFragment extends Fragment {
                     }
                 }
 
+                getActivity().unregisterReceiver(mWifiReceiver);
                 tryAgain();
 
                 _prg_wifi_lock_list.setVisibility(View.GONE);

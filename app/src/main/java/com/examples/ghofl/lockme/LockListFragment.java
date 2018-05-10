@@ -35,6 +35,8 @@ import java.util.Iterator;
 import java.util.List;
 
 public class LockListFragment extends Fragment {
+    private DataQueryBuilder queryBuilder;
+
     private LockListFragment.OnFragmentInteractionListener mListener;
     private RecyclerView _rsv_lock_list;
     private LockListAdapter mLockListAdapter;
@@ -50,6 +52,7 @@ public class LockListFragment extends Fragment {
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        queryBuilder = DataQueryBuilder.create();
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -112,12 +115,12 @@ public class LockListFragment extends Fragment {
         try {
             mUserLocks = (HashMap[]) Backendless.UserService.CurrentUser().getProperty("related_locks");
             if (mUserLocks.length != 0) {
-                ((LockActivity) getActivity()).queryBuilder = DataQueryBuilder.create();
-                ((LockActivity) getActivity()).queryBuilder.setWhereClause(Utilities.createWhereClauseWithListOfObjectId(
+                queryBuilder = DataQueryBuilder.create();
+                queryBuilder.setWhereClause(Utilities.createWhereClauseWithListOfObjectId(
                         Utilities.TABLE_LOCK_COLUMN_RELATED_USERS,
                         "objectId",
                         mUserLocks));
-                Backendless.Data.of(Lock.class).find(((LockActivity) getActivity()).queryBuilder, new AsyncCallback<List<Lock>>() {
+                Backendless.Data.of(Lock.class).find(queryBuilder, new AsyncCallback<List<Lock>>() {
                     @Override
                     public void handleResponse(List<Lock> response) {
                         try {
