@@ -100,5 +100,6 @@
     <string name="lock_wifi_strength_is_low">Lock Wifi strength is low, try again.</string>
     <string name="command_toggle">toggle</string>
     <string name="dialog_button_try_again">Try Again</string>
+    <string name="door_is_open_attention_required">Attention Required, Door is open but locked.</string>
 </resources>
 

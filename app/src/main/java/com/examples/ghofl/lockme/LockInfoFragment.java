@@ -96,14 +96,13 @@ public class LockInfoFragment extends Fragment {
         _img_lock_status.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                requestDirectToggle();
-//                if (Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
-//                    checkDirectConnection();
-//                } else {
-//                    Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
-//                    Log.e(getTag(), "Wifi is off.");
-//                    checkDirectConnection();
-//                }
+                if (Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
+                    requestDirectToggle();
+                } else {
+                    Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
+                    Log.e(getTag(), "Wifi is off.");
+                    requestDirectToggle();
+                }
             }
         });
         //endregion event image lock status click
@@ -147,37 +146,6 @@ public class LockInfoFragment extends Fragment {
         }
     }
 
-    private void checkDirectConnection() {
-        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
-        String url = getString(R.string.esp_http_address_check);
-        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
-            @Override
-            public void onResponse(Object response) {
-
-                Log.e(getTag(), response.toString());
-                requestDirectToggle();
-
-//                try {
-//                    JSONObject mLockInfo = new JSONObject(response.toString());
-//                    if (mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS) != mLockStatus)
-//                        requestDirectToggle();
-//                    else
-//                        Utilities.showSnackBarMessage(getView(), "Door currently is " + (mLockStatus ? "LOCKED!" : "OPENED!"),
-//                                Snackbar.LENGTH_LONG).show();
-//                } catch (JSONException e) {
-//                    Log.e(getTag(), e.getMessage());
-//                }
-            }
-        }, new Response.ErrorListener() {
-            public void onErrorResponse(VolleyError error) {
-
-                Log.e(getTag(), error.toString());
-                requestOnlineToggle();
-            }
-        });
-        MyRequestQueue.add(MyStringRequest);
-    }
-
     private void requestDirectToggle() {
         RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
         String url = getString(R.string.esp_http_address_toggle);
@@ -187,19 +155,6 @@ public class LockInfoFragment extends Fragment {
                 Log.e(this.getClass().getName(), response.toString());
 
                 saveUpdatedStatusOfLockInLocal(response.toString());
-
-//                Utilities.changeLockStatusInView(
-//                        Boolean.valueOf(response.toString()),
-//                        _img_lock_status,
-//                        _txv_lock_status);
-//
-//                Utilities.changeDoorStatusInView(
-//                        Boolean.valueOf(response.toString()),
-//                        _img_door_status,
-//                        _txv_door_status);
-//
-//                saveUpdatedStatusOfLockInLocal(response.toString());
-
             }
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {
@@ -243,7 +198,8 @@ public class LockInfoFragment extends Fragment {
                         Utilities.changeDoorStatusInView(
                                 Boolean.valueOf(message.getData().toString()),
                                 _img_door_status,
-                                _txv_door_status);
+                                _txv_door_status,
+                                Boolean.valueOf(message.getData().toString()));
 
                         readServerStatus();
                     }
@@ -269,16 +225,12 @@ public class LockInfoFragment extends Fragment {
         StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
             @Override
             public void onResponse(Object response) {
-
                 Log.e(getTag(), response.toString());
                 saveUpdatedStatusOfLockInLocal(response.toString());
-
             }
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {
-
                 Log.e(getTag(), error.toString());
-
                 readServerStatus();
             }
         });
@@ -303,7 +255,8 @@ public class LockInfoFragment extends Fragment {
                     Utilities.changeDoorStatusInView(
                             mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS),
                             _img_door_status,
-                            _txv_door_status);
+                            _txv_door_status,
+                            mLockStatus);
                     mLock.setDoorStatus(mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS));
 
                     mLockConnectionStatus = mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS);
@@ -348,7 +301,8 @@ public class LockInfoFragment extends Fragment {
                 Utilities.changeDoorStatusInView(
                         mLockObjectJSONObject.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS),
                         _img_door_status,
-                        _txv_door_status);
+                        _txv_door_status,
+                        mLockStatus);
 
                 mLockConnectionStatus = mLockObjectJSONObject.getBoolean(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS);
 
@@ -369,7 +323,7 @@ public class LockInfoFragment extends Fragment {
         //endregion read status from local
     }
 
-    private void readServerStatus(){
+    private void readServerStatus() {
         //region read status from server
         StringBuilder mLockObjectStringBuilder = new StringBuilder();
         mLockObjectStringBuilder.append(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER);
@@ -388,7 +342,8 @@ public class LockInfoFragment extends Fragment {
                     Utilities.changeDoorStatusInView(
                             locks.get(0).getDoorStatus(),
                             _img_door_status,
-                            _txv_door_status);
+                            _txv_door_status,
+                            mLockStatus);
 
                     mLockConnectionStatus = locks.get(0).getConnectionStatus();
 

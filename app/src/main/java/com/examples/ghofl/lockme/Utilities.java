@@ -458,13 +458,18 @@ public class Utilities {
     }
 
     @SuppressLint("ResourceType")
-    public static void changeDoorStatusInView(Boolean status, ImageView image_view, TextView text_view) {
+    public static void changeDoorStatusInView(Boolean status, ImageView image_view, TextView text_view, Boolean lock_status) {
         if (status) {
             image_view.setImageResource(R.drawable.ic_security_green_24dp);
             text_view.setText(R.string.door_is_close);
         } else {
             image_view.setImageResource(R.drawable.ic_security_black_24dp);
             text_view.setText(R.string.door_is_open_not_secure);
+
+            if (lock_status) {
+                image_view.setImageResource(R.drawable.ic_security_red_24dp);
+                text_view.setText(R.string.door_is_open_attention_required);
+            }
         }
     }
 
