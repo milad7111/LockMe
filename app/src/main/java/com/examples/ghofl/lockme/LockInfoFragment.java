@@ -32,6 +32,7 @@ import com.backendless.messaging.MessageStatus;
 import com.backendless.messaging.PublishOptions;
 import com.backendless.messaging.SubscriptionOptions;
 import com.backendless.persistence.DataQueryBuilder;
+import com.skyfishjy.library.RippleBackground;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -58,6 +59,8 @@ public class LockInfoFragment extends Fragment {
     private Boolean mLockConnectionStatus;
     private Boolean mLockStatus;
 
+    RippleBackground mRippleBackground;
+
     public LockInfoFragment() {
     }
 
@@ -81,6 +84,8 @@ public class LockInfoFragment extends Fragment {
         _img_door_status = rootView.findViewById(R.id.img_door_status);
         _txv_door_status = rootView.findViewById(R.id.txv_door_status);
 
+        mRippleBackground = rootView.findViewById(R.id.ripple_background);
+
         getStatusFromDirectConnection();
 
         //region event image connection status click
@@ -96,12 +101,15 @@ public class LockInfoFragment extends Fragment {
         _img_lock_status.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
-                    requestDirectToggle();
-                } else {
-                    Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
-                    Log.e(getTag(), "Wifi is off.");
-                    requestDirectToggle();
+                if (!mRippleBackground.isRippleAnimationRunning()) {
+                    mRippleBackground.startRippleAnimation();
+                    if (Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
+                        requestDirectToggle();
+                    } else {
+                        Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
+                        Log.e(getTag(), "Wifi is off.");
+                        requestDirectToggle();
+                    }
                 }
             }
         });
@@ -153,8 +161,8 @@ public class LockInfoFragment extends Fragment {
             @Override
             public void onResponse(Object response) {
                 Log.e(this.getClass().getName(), response.toString());
-
                 saveUpdatedStatusOfLockInLocal(response.toString());
+                mRippleBackground.stopRippleAnimation();
             }
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {
@@ -179,6 +187,7 @@ public class LockInfoFragment extends Fragment {
                     public void handleFault(BackendlessFault backendlessFault) {
                         Log.e(getTag(), backendlessFault.getMessage());
                         Utilities.showSnackBarMessage(getView(), backendlessFault.getMessage(), Snackbar.LENGTH_LONG).show();
+                        mRippleBackground.stopRippleAnimation();
                     }
                 });
     }
@@ -206,6 +215,7 @@ public class LockInfoFragment extends Fragment {
 
                     public void handleFault(BackendlessFault fault) {
                         Log.e(getTag(), fault.getMessage());
+                        mRippleBackground.stopRippleAnimation();
                     }
                 },
                 mSubscriptionOptions, new AsyncCallback<Subscription>() {
@@ -361,10 +371,13 @@ public class LockInfoFragment extends Fragment {
 
                     Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), locks.get(0));
                 }
+
+                mRippleBackground.stopRippleAnimation();
             }
 
             public void handleFault(BackendlessFault backendlessFault) {
                 Log.e(getTag(), backendlessFault.getMessage());
+                mRippleBackground.stopRippleAnimation();
             }
         });
         //endregion read status from server

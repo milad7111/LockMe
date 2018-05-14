@@ -101,30 +101,38 @@
         android:gravity="center"
         android:orientation="vertical">
 
-        <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="300dp"
             android:layout_height="300dp"
             android:layout_margin="5dp"
+            android:background="@drawable/corner_radius"
             android:gravity="center">
 
-            <ImageView
-                android:id="@+id/frame"
+            <com.skyfishjy.library.RippleBackground xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/ripple_background"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@drawable/circle_border"
-                android:elevation="10dp" />
-
-            <ImageView
-                android:id="@+id/img_lock_status"
-                android:layout_width="180dp"
-                android:layout_height="180dp"
                 android:layout_gravity="center"
-                android:layout_margin="4dp"
-                android:elevation="12dp"
-                android:src="@drawable/ic_close_lock_48dp" />
+                app:rb_color="#0099CC"
+                app:rb_duration="2000"
+                app:rb_radius="25dp"
+                app:rb_rippleAmount="3"
+                app:rb_scale="6">
 
+                <ImageView
+                    android:id="@+id/img_lock_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="50dp"
+                    android:layout_margin="4dp"
+                    android:elevation="12dp"
+                    android:gravity="center"
+                    android:src="@drawable/ic_close_lock_48dp" />
 
-        </FrameLayout>
+            </com.skyfishjy.library.RippleBackground>
+
+        </RelativeLayout>
 
         <TextView
             android:id="@+id/txv_lock_status"

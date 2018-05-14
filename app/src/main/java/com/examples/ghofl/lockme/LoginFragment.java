@@ -87,6 +87,7 @@ public class LoginFragment extends Fragment {
         super.onStart();
         readMailAndPasswordFromSharedPreference();
         initializeLoginViews();
+        setVisibilityOfSkipButtonDependsOnInternetConnection();
     }
 
     public void onResume() {
@@ -106,7 +107,7 @@ public class LoginFragment extends Fragment {
 
         if (!Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
             Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
-//            setVisibilityOfSkipButtonDependsOnInternetConnection();
+            setVisibilityOfSkipButtonDependsOnInternetConnection();
             Log.e(getTag(), "Wifi is off.");
         }
 //        {
