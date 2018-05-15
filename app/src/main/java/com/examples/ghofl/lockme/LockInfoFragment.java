@@ -17,6 +17,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -37,11 +39,11 @@ import com.skyfishjy.library.RippleBackground;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class LockInfoFragment extends Fragment {
-
-    private OnFragmentInteractionListener mListener;
 
     private DataQueryBuilder queryBuilder;
 
@@ -59,6 +61,8 @@ public class LockInfoFragment extends Fragment {
     private Boolean mLockConnectionStatus;
     private Boolean mLockStatus;
 
+    private Boolean Connection;
+
     RippleBackground mRippleBackground;
 
     public LockInfoFragment() {
@@ -68,6 +72,7 @@ public class LockInfoFragment extends Fragment {
         super.onCreate(savedInstanceState);
         mLockConnectionStatus = false;
         queryBuilder = DataQueryBuilder.create();
+        Connection = false;
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -118,31 +123,9 @@ public class LockInfoFragment extends Fragment {
         return rootView;
     }
 
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null)
-            mListener.onFragmentInteraction(uri);
-    }
-
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener)
-            mListener = (OnFragmentInteractionListener) context;
-        else
-            throw new RuntimeException(context.toString() + " must implement OnFragmentInteractionListener");
-    }
-
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
     public void onStart() {
         super.onStart();
         updateImageResourceAndTexts();
-    }
-
-    public interface OnFragmentInteractionListener {
-        void onFragmentInteraction(Uri var1);
     }
 
     private void updateImageResourceAndTexts() {
@@ -155,33 +138,51 @@ public class LockInfoFragment extends Fragment {
     }
 
     private void requestDirectToggle() {
-        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
-        String url = getString(R.string.esp_http_address_toggle);
-        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
-            @Override
-            public void onResponse(Object response) {
-                Log.e(this.getClass().getName(), response.toString());
-                saveUpdatedStatusOfLockInLocal(response.toString());
-                mRippleBackground.stopRippleAnimation();
+        new Thread(new Task()).start();
+        if (Connection) {
+            RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
+            String url = getString(R.string.esp_http_address_toggle);
+            StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+                @Override
+                public void onResponse(Object response) {
+                    Log.e(this.getClass().getName(), response.toString());
+                    //saveUpdatedStatusOfLockInLocal(response.toString());
+                    //mRippleBackground.stopRippleAnimation();
+                }
+            }, new Response.ErrorListener() {
+                public void onErrorResponse(VolleyError error) {
+                    Log.e(getTag(), error.toString());
+                }
+            });
+            MyStringRequest.setRetryPolicy(new DefaultRetryPolicy(
+                    4500,
+                    DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            MyRequestQueue.add(MyStringRequest);
+        } else
+            requestOnlineToggle();
+    }
+
+    class Task implements Runnable {
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(5000);
+                getStatusFromDirectConnection();
+            } catch (Exception e) {
+                Log.e(getTag(), e.getMessage());
             }
-        }, new Response.ErrorListener() {
-            public void onErrorResponse(VolleyError error) {
-                Log.e(getTag(), error.toString());
-                requestOnlineToggle();
-            }
-        });
-        MyRequestQueue.add(MyStringRequest);
+        }
     }
 
     private void requestOnlineToggle() {
-
         PublishOptions mPublishOptions = new PublishOptions();
         mPublishOptions.setSubtopic(mLockSerialNumber);
         Backendless.Messaging.publish("toggle", getString(R.string.command_toggle),
                 mPublishOptions, new AsyncCallback<MessageStatus>() {
                     public void handleResponse(MessageStatus messageStatus) {
                         Log.i(getTag(), messageStatus.toString());
-                        setAppSubscriber();
+//                        setAppSubscriber();
                     }
 
                     public void handleFault(BackendlessFault backendlessFault) {
@@ -210,6 +211,8 @@ public class LockInfoFragment extends Fragment {
                                 _txv_door_status,
                                 Boolean.valueOf(message.getData().toString()));
 
+                        Log.i(getTag(), response.toString());
+
                         readServerStatus();
                     }
 
@@ -237,10 +240,13 @@ public class LockInfoFragment extends Fragment {
             public void onResponse(Object response) {
                 Log.e(getTag(), response.toString());
                 saveUpdatedStatusOfLockInLocal(response.toString());
+                mRippleBackground.stopRippleAnimation();
+                Connection = true;
             }
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {
                 Log.e(getTag(), error.toString());
+                Connection = false;
                 readServerStatus();
             }
         });

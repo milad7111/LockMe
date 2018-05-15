@@ -110,31 +110,6 @@ public class LoginFragment extends Fragment {
             setVisibilityOfSkipButtonDependsOnInternetConnection();
             Log.e(getTag(), "Wifi is off.");
         }
-//        {
-//            RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
-//            String url = getString(R.string.backendless_base_http_url);
-//            StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
-//                @Override
-//                public void onResponse(Object response) {
-//                    Log.e(getTag(), response.toString());
-//                    _btn_skip_login.setVisibility(View.INVISIBLE);
-//                }
-//            }, new Response.ErrorListener() {
-//                public void onErrorResponse(VolleyError error) {
-//            if (Utilities.hasAdminLock(getActivity()))
-//                _btn_skip_login.setVisibility(View.VISIBLE);
-//            else
-//                _btn_skip_login.setVisibility(View.INVISIBLE);
-
-//                    Log.e(getTag(), error.toString());
-//                }
-//            });
-//            MyRequestQueue.add(MyStringRequest);
-//        } else {
-//            Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
-//            setVisibilityOfSkipButtonDependsOnInternetConnection();
-//            Log.e(getTag(), "Wifi is off.");
-//        }
     }
 
     private void readMailAndPasswordFromSharedPreference() {

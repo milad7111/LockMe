@@ -2,9 +2,11 @@ package com.examples.ghofl.lockme;
 
 
 import android.app.Fragment;
-import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.LinearLayoutManager;
@@ -37,7 +39,6 @@ import java.util.List;
 public class LockListFragment extends Fragment {
     private DataQueryBuilder queryBuilder;
 
-    private LockListFragment.OnFragmentInteractionListener mListener;
     private RecyclerView _rsv_lock_list;
     private LockListAdapter mLockListAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
@@ -56,12 +57,16 @@ public class LockListFragment extends Fragment {
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.layout_fragment_lock_list, container, false);
+        return inflater.inflate(R.layout.layout_fragment_lock_list, container, false);
+    }
 
-        _rsv_lock_list = rootView.findViewById(R.id.rsv_lock_list);
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        // use this setting to improve performance if you know that changes
-        // in content do not change the layout size of the RecyclerView
+        _rsv_lock_list = view.findViewById(R.id.rsv_lock_list);
+
+        // use this setting to improve performance if you know that changes, in content do not change the layout size of the RecyclerView
         _rsv_lock_list.setHasFixedSize(true);
 
         mLayoutManager = new LinearLayoutManager(getActivity().getBaseContext());
@@ -71,7 +76,7 @@ public class LockListFragment extends Fragment {
         mLockListAdapter = new LockListAdapter(getActivity().getBaseContext(), mUserLockJsonObjectList, this);
         _rsv_lock_list.setAdapter(mLockListAdapter);
 
-        fab = rootView.findViewById(R.id.fab);
+        fab = view.findViewById(R.id.fab);
         if (fab != null) {
             fab.setOnClickListener(new OnClickListener() {
                 public void onClick(View view) {
@@ -79,26 +84,6 @@ public class LockListFragment extends Fragment {
                 }
             });
         }
-
-        return rootView;
-    }
-
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null)
-            mListener.onFragmentInteraction(uri);
-    }
-
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof LockListFragment.OnFragmentInteractionListener)
-            mListener = (LockListFragment.OnFragmentInteractionListener) context;
-        else
-            throw new RuntimeException(context.toString() + " must implement OnFragmentInteractionListener");
-    }
-
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
     }
 
     public void onStart() {
@@ -130,6 +115,7 @@ public class LockListFragment extends Fragment {
                         }
 
                         showServerLocks(response);
+                        updateLocalInfoAboutLocks(response);
                     }
 
                     @Override
@@ -144,6 +130,40 @@ public class LockListFragment extends Fragment {
         }
     }
 
+    private void updateLocalInfoAboutLocks(List<Lock> lock_list) {
+
+        Utilities.setValueInSharedPreferenceObject(getActivity().getBaseContext(), "locks", getString(R.string.empty_phrase));
+        JSONObject mLock;
+        int numberOfAdminStatus = 0;
+
+        for (int i = 0; i < lock_list.size(); i++) {
+            try {
+                Lock mLockObject = lock_list.get(i);
+                mLock = new JSONObject();
+                mLock.put(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, mLockObject.getSerialNumber().getSerialNumber());
+                mLock.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME, mLockObject.getLockName(0));
+                mLock.put(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID, getString(R.string.empty_phrase));
+                mLock.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, mLockObject.getAdminStatus(0));
+                mLock.put(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS, mLockObject.getLockStatus());
+                mLock.put(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS, mLockObject.getDoorStatus());
+                mLock.put(Utilities.TABLE_USER_LOCK_COLUMN_SAVE_STATUS, true);
+                mLock.put(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS, mLockObject.getConnectionStatus());
+                mLock.put(Utilities.TABLE_LOCK_COLUMN_BATTERY_STATUS, mLockObject.getBatteryStatus());
+                mLock.put(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS, mLockObject.getWifiStatus());
+
+                Utilities.addUserLockInLocal(getActivity(), mLock);
+                if (mLockObject.getAdminStatus(0))
+                    numberOfAdminStatus++;
+            } catch (JSONException e) {
+                Log.e(getTag(), e.getMessage());
+            }
+        }
+
+        Utilities.setValueInSharedPreferenceObject(getActivity().getBaseContext(),
+                getString(R.string.share_preference_parameter_number_of_admin_lock),
+                String.valueOf(numberOfAdminStatus));
+    }
+
     private void showServerLocks(List<Lock> lock_list) {
         mUserLockJsonObjectList.clear();
 
@@ -153,8 +173,8 @@ public class LockListFragment extends Fragment {
                 mLockObject.put(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS, lock_list.get(i).getConnectionStatus());
                 mLockObject.put(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS, lock_list.get(i).getLockStatus());
                 //TODO ATTENTION: Two forward lines are true : if order of mUserLocks members and Retrieve Locks be the same
-                mLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME, lock_list.get(i).getLockName(i));
-                mLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, lock_list.get(i).getAdminStatus(i));
+                mLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME, lock_list.get(i).getLockName(0));
+                mLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, lock_list.get(i).getAdminStatus(0));
                 mLockObject.put(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, lock_list.get(0).getSerialNumber().getSerialNumber());
                 mUserLockJsonObjectList.add(mLockObject);
 
@@ -186,14 +206,11 @@ public class LockListFragment extends Fragment {
         }
     }
 
-    public interface OnFragmentInteractionListener {
-        void onFragmentInteraction(Uri var1);
-    }
-
     private void checkInternetConnection() {
         RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
         String url = getString(R.string.backendless_base_http_url);
         StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onResponse(Object response) {
                 Log.e(getTag(), response.toString());
@@ -203,8 +220,6 @@ public class LockListFragment extends Fragment {
 
                 if (Backendless.UserService.CurrentUser() == null)
                     getActivity().finish();
-                else
-                    getAllSavedLock();
             }
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {

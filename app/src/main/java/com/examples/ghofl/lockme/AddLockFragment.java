@@ -43,7 +43,6 @@ import java.util.Iterator;
 import java.util.List;
 
 public class AddLockFragment extends Fragment {
-    private OnFragmentInteractionListener mListener;
     private ProgressBar _prg_wifi_lock_list;
     private ListView _lsv_lock_wifi;
     private static WifiManager mWifiManager;
@@ -79,25 +78,6 @@ public class AddLockFragment extends Fragment {
         _lsv_lock_wifi = rootView.findViewById(R.id.lsv_lock_wifi);
 
         return rootView;
-    }
-
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener)
-            mListener = (OnFragmentInteractionListener) context;
-        else
-            throw new RuntimeException(context.toString() + " must implement OnFragmentInteractionListener");
-    }
-
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
     }
 
     public void onStart() {
@@ -226,27 +206,22 @@ public class AddLockFragment extends Fragment {
         }
     }
 
-    public interface OnFragmentInteractionListener {
-        void onFragmentInteraction(Uri var1);
-
-    }
-
     private void saveLockToLocal(Boolean saved_on_server) {
-        JSONObject mUniqueLock = new JSONObject();
+        JSONObject mLock = new JSONObject();
 
         try {
-            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, mLockSerialNumber);
-            mUniqueLock.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME, mLockName);
-            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID, mLockWifiName);
-            mUniqueLock.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, true);
-            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS, true);
-            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS, true);
-            mUniqueLock.put(Utilities.TABLE_USER_LOCK_COLUMN_SAVE_STATUS, saved_on_server);
-            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS, false);
-            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_BATTERY_STATUS, 0);
-            mUniqueLock.put(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS, 0);
+            mLock.put(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, mLockSerialNumber);
+            mLock.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME, mLockName);
+            mLock.put(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID, mLockWifiName);
+            mLock.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, true);
+            mLock.put(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS, true);
+            mLock.put(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS, true);
+            mLock.put(Utilities.TABLE_USER_LOCK_COLUMN_SAVE_STATUS, saved_on_server);
+            mLock.put(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS, false);
+            mLock.put(Utilities.TABLE_LOCK_COLUMN_BATTERY_STATUS, 0);
+            mLock.put(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS, 0);
 
-            Utilities.addUserLockInLocal(getActivity(), mUniqueLock);
+            Utilities.addUserLockInLocal(getActivity(), mLock);
             Utilities.setValueInSharedPreferenceObject(getActivity().getBaseContext(),
                     getString(R.string.share_preference_parameter_number_of_admin_lock),
                     String.valueOf(
@@ -254,7 +229,6 @@ public class AddLockFragment extends Fragment {
                                     getString(R.string.share_preference_parameter_number_of_admin_lock), String.valueOf(0))) + 1));
 
             goToLockInfo();
-
         } catch (JSONException e) {
             Log.e(getTag(), e.getMessage());
         }
