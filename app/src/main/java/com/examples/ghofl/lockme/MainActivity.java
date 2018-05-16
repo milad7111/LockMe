@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
     private MainActivity.ViewPagerAdapter mAdapter;
     private Toolbar mToolbar;
     private TabLayout mTabLayout;
@@ -65,8 +66,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void comeFromLogin() {
-        Intent mLockActivity = new Intent(this, LockActivity.class);
-        startActivity(mLockActivity);
+        startActivity(new Intent(this, LockActivity.class));
     }
 
     class ViewPagerAdapter extends FragmentPagerAdapter {

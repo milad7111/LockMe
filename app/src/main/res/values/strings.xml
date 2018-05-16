@@ -101,5 +101,15 @@
     <string name="command_toggle">toggle</string>
     <string name="dialog_button_try_again">Try Again</string>
     <string name="door_is_open_attention_required">Attention Required, Door is open but locked.</string>
+    <string name="action_wifi_scan_result">android.net.wifi.SCAN_RESULTS</string>
+    <string name="snackbar_action_try">Try</string>
+    <string name="snackbar_message_find_more">Find more ...</string>
+    <string name="message_not_admin_for_lock">You are not admin for this lock.</string>
+    <string name="snackbar_message_syncing">Syncing ...</string>
+    <string name="snackbar_message_offline">You are offline ...</string>
+    <string name="message_wifi_is_off">Wifi is off.</string>
+    <string name="message_wifi_off_wait">Wifi is off, Please wait.</string>
+    <string name="channel_response_toggle">response_toggle</string>
+    <string name="channel_toggle">toggle</string>
 </resources>
 

@@ -8,11 +8,11 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
-import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AlertDialog.Builder;
@@ -43,6 +43,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class AddLockFragment extends Fragment {
+
     private ProgressBar _prg_wifi_lock_list;
     private ListView _lsv_lock_wifi;
     private static WifiManager mWifiManager;
@@ -72,12 +73,15 @@ public class AddLockFragment extends Fragment {
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.layout_fragment_add_lock, container, false);
+        return inflater.inflate(R.layout.layout_fragment_add_lock, container, false);
+    }
 
-        _prg_wifi_lock_list = rootView.findViewById(R.id.prg_wifi_lock_list);
-        _lsv_lock_wifi = rootView.findViewById(R.id.lsv_lock_wifi);
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        return rootView;
+        _prg_wifi_lock_list = view.findViewById(R.id.prg_wifi_lock_list);
+        _lsv_lock_wifi = view.findViewById(R.id.lsv_lock_wifi);
     }
 
     public void onStart() {
@@ -101,13 +105,13 @@ public class AddLockFragment extends Fragment {
     private void fillAdapterLockWifi() {
         if (!mWifiManager.isWifiEnabled()) {
             if (mWifiManager.setWifiEnabled(true)) {
-                getActivity().registerReceiver(mWifiReceiver, new IntentFilter("android.net.wifi.SCAN_RESULTS"));
+                getActivity().registerReceiver(mWifiReceiver, new IntentFilter(getString(R.string.action_wifi_scan_result)));
                 mWifiManager.startScan();
             } else {
                 Log.i(getTag(), getString(R.string.permission_wifi_needed));
             }
         } else if (mWifiManager.isWifiEnabled()) {
-            getActivity().registerReceiver(mWifiReceiver, new IntentFilter("android.net.wifi.SCAN_RESULTS"));
+            getActivity().registerReceiver(mWifiReceiver, new IntentFilter(getString(R.string.action_wifi_scan_result)));
             mWifiManager.startScan();
         }
 
@@ -185,17 +189,16 @@ public class AddLockFragment extends Fragment {
 
         public void onReceive(Context c, Intent intent) {
             String action = intent.getAction();
-            if (action != null && action.equals("android.net.wifi.SCAN_RESULTS")) {
+            if (action != null && action.equals(getString(R.string.action_wifi_scan_result))) {
                 mWifiLockList = mWifiManager.getScanResults();
                 mWifiLockArrayList.clear();
                 ArrayList<String> mSavedWifiNames = Utilities.getSavedLocalWifiNames(getActivity().getBaseContext());
 
-                for (int i = 0; i < mWifiLockList.size(); ++i) {
+                for (int i = 0; i < mWifiLockList.size(); ++i)
                     if ((mWifiLockList.get(i)).SSID.contains(getString(R.string.WIFI_PREFIX_NAME)) &&
                             !mSavedWifiNames.contains((mWifiLockList.get(i)).SSID)) {
                         mWifiLockArrayList.add((mWifiLockList.get(i)).SSID);
                     }
-                }
 
                 getActivity().unregisterReceiver(mWifiReceiver);
                 tryAgain();
@@ -227,7 +230,6 @@ public class AddLockFragment extends Fragment {
                     String.valueOf(
                             Integer.parseInt(Utilities.readSharedPreferenceObject(getActivity().getBaseContext(),
                                     getString(R.string.share_preference_parameter_number_of_admin_lock), String.valueOf(0))) + 1));
-
             goToLockInfo();
         } catch (JSONException e) {
             Log.e(getTag(), e.getMessage());
@@ -247,15 +249,22 @@ public class AddLockFragment extends Fragment {
         StringRequest MyStringRequestForCheck = new StringRequest(Request.Method.GET, url, new Listener() {
             @Override
             public void onResponse(Object response) {
-                Log.i(getTag(), response.toString());
-                saveLockToLocal(false);
+                try {
+                    Log.i(getTag(), response.toString());
+                    saveLockToLocal(false);
+                } catch (Exception e) {
+                    Log.i(getTag(), e.getMessage());
+                }
             }
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {
-                Log.e(getTag(), error.toString());
-                _prg_wifi_lock_list.setVisibility(View.GONE);
-
-                Utilities.showSnackBarMessage(getView(), getString(R.string.lock_wifi_strength_is_low), Snackbar.LENGTH_INDEFINITE).show();
+                try {
+                    Log.e(getTag(), error.toString());
+                    _prg_wifi_lock_list.setVisibility(View.GONE);
+                    Utilities.showSnackBarMessage(getView(), getString(R.string.lock_wifi_strength_is_low), Snackbar.LENGTH_INDEFINITE).show();
+                } catch (Exception e){
+                    Log.i(getTag(), e.getMessage());
+                }
             }
         });
 
@@ -275,38 +284,46 @@ public class AddLockFragment extends Fragment {
             fillAdapterLockWifi();
             _prg_wifi_lock_list.setVisibility(View.VISIBLE);
         } else {
-            _prg_wifi_lock_list.setVisibility(View.GONE);
-            mSnackBar = Utilities.showSnackBarMessage(getView(), "Turn on WIFI", Snackbar.LENGTH_INDEFINITE);
-            mSnackBar.setAction(R.string.dialog_button_confirm, new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
-                    mSnackBar.dismiss();
-                    _prg_wifi_lock_list.setVisibility(View.VISIBLE);
+           try {
+               _prg_wifi_lock_list.setVisibility(View.GONE);
+               mSnackBar = Utilities.showSnackBarMessage(getView(), "Turn on WIFI", Snackbar.LENGTH_INDEFINITE);
+               mSnackBar.setAction(R.string.dialog_button_confirm, new View.OnClickListener() {
+                   @Override
+                   public void onClick(View view) {
+                       Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
+                       mSnackBar.dismiss();
+                       _prg_wifi_lock_list.setVisibility(View.VISIBLE);
 
-                    try {
-                        Thread.sleep(3000);
-                        _prg_wifi_lock_list.setVisibility(View.GONE);
-                    } catch (InterruptedException e) {
-                        Log.e(getTag(), e.getMessage());
-                    }
+                       try {
+                           Thread.sleep(3000);
+                           _prg_wifi_lock_list.setVisibility(View.GONE);
+                       } catch (InterruptedException e) {
+                           Log.e(getTag(), e.getMessage());
+                       }
 
-                    checkWifi();
-                }
-            });
-            mSnackBar.show();
+                       checkWifi();
+                   }
+               });
+               mSnackBar.show();
+           } catch (Exception e){
+               Log.e(getTag(), e.getMessage());
+           }
         }
     }
 
     private void tryAgain() {
-        mSnackBar = Utilities.showSnackBarMessage(getView(), "Find more ...", Snackbar.LENGTH_INDEFINITE);
-        mSnackBar.setAction("Try", new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                checkWifi();
-                mSnackBar.dismiss();
-            }
-        });
-        mSnackBar.show();
+        try {
+            mSnackBar = Utilities.showSnackBarMessage(getView(), getString(R.string.snackbar_message_find_more), Snackbar.LENGTH_INDEFINITE);
+            mSnackBar.setAction(R.string.snackbar_action_try, new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    checkWifi();
+                    mSnackBar.dismiss();
+                }
+            });
+            mSnackBar.show();
+        } catch (Exception e){
+            Log.e(getTag(), e.getMessage());
+        }
     }
 }

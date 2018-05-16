@@ -28,6 +28,7 @@ import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
 
 public class RegisterFragment extends Fragment {
+
     EditText _edt_register_mail;
     EditText _edt_register_mobile_number;
     EditText _edt_register_password;
@@ -69,7 +70,11 @@ public class RegisterFragment extends Fragment {
                 Log.e(getTag(), response.toString());
 
                 if (!_edt_register_password.getText().toString().equals(_edt_repeat_password.getText().toString()))
-                    Utilities.showSnackBarMessage(getView(), getString(R.string.toast_password_not_match), Snackbar.LENGTH_LONG).show();
+                    try {
+                        Utilities.showSnackBarMessage(getView(), getString(R.string.toast_password_not_match), Snackbar.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Log.e(getTag(), e.getMessage());
+                    }
                 else {
                     BackendlessUser user = new BackendlessUser();
                     user.setEmail(_edt_register_mail.getText().toString());
@@ -86,8 +91,12 @@ public class RegisterFragment extends Fragment {
                         public void handleResponse(Object response) {
                             _prg_register.setVisibility(View.INVISIBLE);
 
-                            Utilities.showSnackBarMessage(getView(), getString(R.string.toast_user_registered), Snackbar.LENGTH_LONG).show();
-                            ((MainActivity) getActivity()).switchTab(0, _edt_register_mail.getText().toString());
+                            try {
+                                Utilities.showSnackBarMessage(getView(), getString(R.string.toast_user_registered), Snackbar.LENGTH_LONG).show();
+                                ((MainActivity) getActivity()).switchTab(0, _edt_register_mail.getText().toString());
+                            } catch (Exception e) {
+                                Log.e(getTag(), e.getMessage());
+                            }
 
                             _edt_register_mail.setText(null);
                             _edt_register_mobile_number.setText(null);
@@ -106,7 +115,6 @@ public class RegisterFragment extends Fragment {
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {
                 Log.e(this.getClass().getName(), error.toString());
-
                 requestConnectToNetworkOrDataMobile();
             }
         });

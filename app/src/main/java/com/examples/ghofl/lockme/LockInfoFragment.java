@@ -2,13 +2,9 @@ package com.examples.ghofl.lockme;
 
 
 import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
-import android.content.Context;
-import android.icu.util.UniversalTimeScale;
 import android.net.ConnectivityManager;
-import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,7 +13,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -39,9 +34,7 @@ import com.skyfishjy.library.RippleBackground;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class LockInfoFragment extends Fragment {
 
@@ -50,20 +43,18 @@ public class LockInfoFragment extends Fragment {
     private ImageView _img_battery_status;
     private ImageView _img_connection_status;
     private ImageView _img_wifi_status;
-
     private ImageView _img_lock_status;
     private TextView _txv_lock_status;
-
     private ImageView _img_door_status;
     private TextView _txv_door_status;
 
     private String mLockSerialNumber;
     private Boolean mLockConnectionStatus;
     private Boolean mLockStatus;
-
     private Boolean Connection;
-
-    RippleBackground mRippleBackground;
+    private Boolean mMessageDeliver;
+    private RippleBackground mRippleBackground;
+    private Snackbar mSnacbar;
 
     public LockInfoFragment() {
     }
@@ -73,23 +64,29 @@ public class LockInfoFragment extends Fragment {
         mLockConnectionStatus = false;
         queryBuilder = DataQueryBuilder.create();
         Connection = false;
+        mMessageDeliver = false;
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.layout_fragment_lock_info, container, false);
+        return inflater.inflate(R.layout.layout_fragment_lock_info, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         //defining views
-        _img_battery_status = rootView.findViewById(R.id.img_battery_status);
-        _img_connection_status = rootView.findViewById(R.id.img_connection_status);
-        _img_wifi_status = rootView.findViewById(R.id.img_wifi_status);
+        _img_battery_status = view.findViewById(R.id.img_battery_status);
+        _img_connection_status = view.findViewById(R.id.img_connection_status);
+        _img_wifi_status = view.findViewById(R.id.img_wifi_status);
 
-        _img_lock_status = rootView.findViewById(R.id.img_lock_status);
-        _txv_lock_status = rootView.findViewById(R.id.txv_lock_status);
+        _img_lock_status = view.findViewById(R.id.img_lock_status);
+        _txv_lock_status = view.findViewById(R.id.txv_lock_status);
 
-        _img_door_status = rootView.findViewById(R.id.img_door_status);
-        _txv_door_status = rootView.findViewById(R.id.txv_door_status);
+        _img_door_status = view.findViewById(R.id.img_door_status);
+        _txv_door_status = view.findViewById(R.id.txv_door_status);
 
-        mRippleBackground = rootView.findViewById(R.id.ripple_background);
+        mRippleBackground = view.findViewById(R.id.ripple_background);
 
         getStatusFromDirectConnection();
 
@@ -119,8 +116,6 @@ public class LockInfoFragment extends Fragment {
             }
         });
         //endregion event image lock status click
-
-        return rootView;
     }
 
     public void onStart() {
@@ -145,50 +140,66 @@ public class LockInfoFragment extends Fragment {
             StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
                 @Override
                 public void onResponse(Object response) {
-                    Log.e(this.getClass().getName(), response.toString());
-                    //saveUpdatedStatusOfLockInLocal(response.toString());
-                    //mRippleBackground.stopRippleAnimation();
+                    Log.e(getTag(), response.toString());
+                    mMessageDeliver = true;
+                    saveUpdatedStatusOfLockInLocal(response.toString());
+                    mRippleBackground.stopRippleAnimation();
                 }
             }, new Response.ErrorListener() {
                 public void onErrorResponse(VolleyError error) {
                     Log.e(getTag(), error.toString());
+                    try {
+                        Utilities.showSnackBarMessage(getView(), "Direct Order Failed.", Snackbar.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Log.e(getTag(), e.getMessage());
+                    }
                 }
             });
+
             MyStringRequest.setRetryPolicy(new DefaultRetryPolicy(
                     4500,
                     DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                     DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
             MyRequestQueue.add(MyStringRequest);
         } else
             requestOnlineToggle();
     }
 
-    class Task implements Runnable {
-        @Override
-        public void run() {
-            try {
-                Thread.sleep(5000);
-                getStatusFromDirectConnection();
-            } catch (Exception e) {
-                Log.e(getTag(), e.getMessage());
-            }
-        }
-    }
-
     private void requestOnlineToggle() {
         PublishOptions mPublishOptions = new PublishOptions();
         mPublishOptions.setSubtopic(mLockSerialNumber);
-        Backendless.Messaging.publish("toggle", getString(R.string.command_toggle),
+        Backendless.Messaging.publish(getString(R.string.channel_toggle), getString(R.string.command_toggle),
                 mPublishOptions, new AsyncCallback<MessageStatus>() {
                     public void handleResponse(MessageStatus messageStatus) {
                         Log.i(getTag(), messageStatus.toString());
-//                        setAppSubscriber();
+
+                        if (messageStatus.getErrorMessage() == null) {
+                            try {
+                                mSnacbar = Utilities.showSnackBarMessage(
+                                        getView(),
+                                        "Command sent, Waiting for response ...",
+                                        Snackbar.LENGTH_SHORT);
+                                mSnacbar.show();
+                            } catch (Exception e) {
+                                Log.e(getTag(), e.getMessage());
+                            }
+
+                            mMessageDeliver = true;
+                            setAppSubscriber();
+                        }
                     }
 
                     public void handleFault(BackendlessFault backendlessFault) {
-                        Log.e(getTag(), backendlessFault.getMessage());
-                        Utilities.showSnackBarMessage(getView(), backendlessFault.getMessage(), Snackbar.LENGTH_LONG).show();
-                        mRippleBackground.stopRippleAnimation();
+                        try {
+                            Log.e(getTag(), backendlessFault.getMessage());
+                            Utilities.showSnackBarMessage(getView(), "Nothing received.", Snackbar.LENGTH_SHORT).show();
+
+                            mMessageDeliver = false;
+                            mRippleBackground.stopRippleAnimation();
+                        } catch (Exception e) {
+                            Log.e(getTag(), e.getMessage());
+                        }
                     }
                 });
     }
@@ -196,23 +207,9 @@ public class LockInfoFragment extends Fragment {
     private void setAppSubscriber() {
         SubscriptionOptions mSubscriptionOptions = new SubscriptionOptions();
         mSubscriptionOptions.setSubtopic(mLockSerialNumber);
-        Backendless.Messaging.subscribe("response_toggle", new AsyncCallback<List<Message>>() {
+        Backendless.Messaging.subscribe(getString(R.string.channel_response_toggle), new AsyncCallback<List<Message>>() {
                     public void handleResponse(List<Message> response) {
-                        Message message = response.get(0);
-
-                        Utilities.changeLockStatusInView(
-                                Boolean.valueOf(message.getData().toString()),
-                                _img_lock_status,
-                                _txv_lock_status);
-
-                        Utilities.changeDoorStatusInView(
-                                Boolean.valueOf(message.getData().toString()),
-                                _img_door_status,
-                                _txv_door_status,
-                                Boolean.valueOf(message.getData().toString()));
-
                         Log.i(getTag(), response.toString());
-
                         readServerStatus();
                     }
 
@@ -224,6 +221,8 @@ public class LockInfoFragment extends Fragment {
                 mSubscriptionOptions, new AsyncCallback<Subscription>() {
                     public void handleResponse(Subscription response) {
                         Log.e(getTag(), response.toString());
+//                        Subscription mSubscription = response;
+//                        mSubscription.cancelSubscription();
                     }
 
                     public void handleFault(BackendlessFault fault) {
@@ -303,11 +302,11 @@ public class LockInfoFragment extends Fragment {
     }
 
     private void readLocalStatus() {
-        //region read status from local
-        JSONObject mLockObjectJSONObject = Utilities.getLockFromLocalWithSerialNumber(getActivity(), mLockSerialNumber);
+        try {
+            //region read status from local
+            JSONObject mLockObjectJSONObject = Utilities.getLockFromLocalWithSerialNumber(getActivity(), mLockSerialNumber);
 
-        if (mLockObjectJSONObject != null)
-            try {
+            if (mLockObjectJSONObject != null) {
                 mLockStatus = mLockObjectJSONObject.getBoolean(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS);
                 Utilities.changeLockStatusInView(
                         mLockStatus,
@@ -333,9 +332,10 @@ public class LockInfoFragment extends Fragment {
                 Utilities.changeWifiStatusInView(
                         mLockObjectJSONObject.getInt(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS),
                         _img_wifi_status);
-            } catch (JSONException e) {
-                Log.e(getTag(), e.getMessage());
             }
+        } catch (JSONException e) {
+            Log.e(getTag(), e.getMessage());
+        }
         //endregion read status from local
     }
 
@@ -343,42 +343,51 @@ public class LockInfoFragment extends Fragment {
         //region read status from server
         StringBuilder mLockObjectStringBuilder = new StringBuilder();
         mLockObjectStringBuilder.append(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER);
-        mLockObjectStringBuilder.append(".").append(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER).append("= \'").append(mLockSerialNumber).append("\'");
+        mLockObjectStringBuilder
+                .append(".")
+                .append(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER)
+                .append("= \'")
+                .append(mLockSerialNumber)
+                .append("\'");
+
         queryBuilder.setWhereClause(String.valueOf(mLockObjectStringBuilder));
         Backendless.Data.of(Lock.class).find(queryBuilder, new AsyncCallback<List<Lock>>() {
             public void handleResponse(List<Lock> locks) {
-                if (locks.size() != 0) {
+                try {
+                    if (locks.size() != 0) {
+                        mLockStatus = locks.get(0).getLockStatus();
+                        Utilities.changeLockStatusInView(
+                                mLockStatus,
+                                _img_lock_status,
+                                _txv_lock_status);
 
-                    mLockStatus = locks.get(0).getLockStatus();
-                    Utilities.changeLockStatusInView(
-                            mLockStatus,
-                            _img_lock_status,
-                            _txv_lock_status);
+                        Utilities.changeDoorStatusInView(
+                                locks.get(0).getDoorStatus(),
+                                _img_door_status,
+                                _txv_door_status,
+                                mLockStatus);
 
-                    Utilities.changeDoorStatusInView(
-                            locks.get(0).getDoorStatus(),
-                            _img_door_status,
-                            _txv_door_status,
-                            mLockStatus);
+                        mLockConnectionStatus = locks.get(0).getConnectionStatus();
 
-                    mLockConnectionStatus = locks.get(0).getConnectionStatus();
+                        Utilities.changeConnectionStatusInView(
+                                mLockConnectionStatus,
+                                _img_connection_status);
 
-                    Utilities.changeConnectionStatusInView(
-                            mLockConnectionStatus,
-                            _img_connection_status);
+                        Utilities.changeBatteryStatusInView(
+                                locks.get(0).getBatteryStatus(),
+                                _img_battery_status);
 
-                    Utilities.changeBatteryStatusInView(
-                            locks.get(0).getBatteryStatus(),
-                            _img_battery_status);
+                        Utilities.changeWifiStatusInView(
+                                locks.get(0).getWifiStatus(),
+                                _img_wifi_status);
 
-                    Utilities.changeWifiStatusInView(
-                            locks.get(0).getWifiStatus(),
-                            _img_wifi_status);
+                        Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), locks.get(0));
+                    }
 
-                    Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), locks.get(0));
+                    mRippleBackground.stopRippleAnimation();
+                } catch (Exception e) {
+                    Log.e(getTag(), e.getMessage());
                 }
-
-                mRippleBackground.stopRippleAnimation();
             }
 
             public void handleFault(BackendlessFault backendlessFault) {
@@ -387,6 +396,24 @@ public class LockInfoFragment extends Fragment {
             }
         });
         //endregion read status from server
+    }
+
+    class Task implements Runnable {
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(5000);
+                if (!mMessageDeliver)
+                    try {
+                        mSnacbar.dismiss();
+                    } catch (Exception e) {
+                        Log.e(getTag(), e.getMessage());
+                    }
+                getStatusFromDirectConnection();
+            } catch (Exception e) {
+                Log.e(getTag(), e.getMessage());
+            }
+        }
     }
 }
 

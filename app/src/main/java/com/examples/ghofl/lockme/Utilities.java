@@ -489,5 +489,13 @@ public class Utilities {
         WifiManager mWifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         return mWifiManager.getConnectionInfo().getSSID().toString();
     }
+
+    public static void sleepSomeTime(int time) {
+        try {
+            Thread.sleep(time);
+        } catch (Exception e) {
+            Log.e("Utilities", e.getMessage());
+        }
+    }
 }
 

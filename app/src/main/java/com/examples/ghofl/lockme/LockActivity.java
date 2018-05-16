@@ -10,15 +10,8 @@ import android.util.Log;
 
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
-import com.backendless.Subscription;
-import com.backendless.async.callback.AsyncCallback;
-import com.backendless.exceptions.BackendlessFault;
-import com.backendless.messaging.Message;
-import com.backendless.messaging.SubscriptionOptions;
-import com.backendless.persistence.DataQueryBuilder;
 
 import java.util.HashMap;
-import java.util.List;
 
 public class LockActivity extends AppCompatActivity {
     public BackendlessUser mCurrentUser;

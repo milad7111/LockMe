@@ -23,17 +23,12 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.backendless.Backendless;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
 import java.util.List;
-
-/**
- * Created by family on 4/25/2018.
- */
 
 public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHolder> {
 
@@ -169,7 +164,7 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
                                 .getBoolean(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS))
                             checkDirectConnection(position);
                         else
-                            Utilities.showSnackBarMessage(mFragment.getView(), "You are not admin for this lock.",
+                            Utilities.showSnackBarMessage(mFragment.getView(), mContext.getString(R.string.message_not_admin_for_lock),
                                     Snackbar.LENGTH_LONG).show();
                     } catch (JSONException e) {
                         Log.e(this.getClass().getName(), e.getMessage());
@@ -178,21 +173,19 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
             });
             MyRequestQueue.add(MyStringRequest);
         } else {
-            Utilities.setWifiEnabled(mContext, true);
-            Log.e(this.getClass().getName(), "Wifi is off.");
-
             try {
-                Thread.sleep(3000);
+                Utilities.setWifiEnabled(mContext, true);
+                Log.e(this.getClass().getName(), mContext.getString(R.string.message_wifi_is_off));
+                Utilities.sleepSomeTime(3000);
+                checkInternetConnection(position);
             } catch (Exception e) {
                 Log.e(this.getClass().getName(), e.getMessage());
             }
-
-            checkInternetConnection(position);
         }
     }
 
     private void checkDirectConnection(final int position) throws JSONException {
-        String mConnectedWifiName = Utilities.checkConnectToAnyLockWifi(mContext).replace("\"","");
+        String mConnectedWifiName = Utilities.checkConnectToAnyLockWifi(mContext).replace("\"", "");
         String mWifiNameOfSelectedLock = Utilities.getLockFromLocalWithSerialNumber(
                 mContext,
                 mData.get(position)
@@ -228,11 +221,7 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
                 }
             }
 
-            try {
-                Thread.sleep(3000);
-            } catch (Exception e) {
-                Log.e(this.getClass().getName(), e.getMessage());
-            }
+            Utilities.sleepSomeTime(3000);
         }
 
         RequestQueue MyRequestQueue = Volley.newRequestQueue(mContext);

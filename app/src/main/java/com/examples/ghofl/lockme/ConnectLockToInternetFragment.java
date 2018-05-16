@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
@@ -31,7 +32,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ConnectLockToInternetFragment extends Fragment {
-    private OnFragmentInteractionListener mListener;
 
     private ListView _lsv_internet_network;
     private ArrayList<String> mWifiNetworks;
@@ -53,29 +53,14 @@ public class ConnectLockToInternetFragment extends Fragment {
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.layout_fragment_connect_lock_to_internet, container, false);
-
-        _lsv_internet_network = rootView.findViewById(R.id.lsv_internet_network);
-
-        return rootView;
+        return inflater.inflate(R.layout.layout_fragment_connect_lock_to_internet, container, false);
     }
 
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null)
-            mListener.onFragmentInteraction(uri);
-    }
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener)
-            mListener = (OnFragmentInteractionListener) context;
-        else
-            throw new RuntimeException(context.toString() + " must implement OnFragmentInteractionListener");
-    }
-
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
+        _lsv_internet_network = view.findViewById(R.id.lsv_internet_network);
     }
 
     public void onStart() {
@@ -89,45 +74,48 @@ public class ConnectLockToInternetFragment extends Fragment {
         StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Listener() {
             @Override
             public void onResponse(Object response) {
-                _lsv_internet_network.setAdapter(null);
-                mWifiNetworks = Utilities.parseESPAvailableNetworksResponse(response.toString());
-                mArrayAdapter = new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, mWifiNetworks);
-                _lsv_internet_network.setAdapter(mArrayAdapter);
-                _lsv_internet_network.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                        mSSIDForConnectESP8266ToInternet = mWifiNetworks.get(i);
-                        builder = (new AlertDialog.Builder(getActivity())).setView(getActivity().getLayoutInflater().inflate(
-                                R.layout.layout_dialog_wifi_password, null)).setNegativeButton(R.string.dialog_button_discard,
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int whichButton) {
-                                        dialogView.dismiss();
-                                    }
-                                }).setPositiveButton(R.string.dialog_button_confirm, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                            }
-                        }).setTitle(getString(R.string.dialog_enter_password) + mWifiNetworks.get(i));
-                        dialogView = builder.create();
-                        dialogView.show();
-
-                        _edt_lock_password = dialogView.findViewById(R.id.edt_lock_password);
-                        _edt_lock_name = dialogView.findViewById(R.id.edt_lock_name);
-                        _edt_lock_name.setVisibility(View.GONE);
-
-                        dialogView.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new android.view.View.OnClickListener() {
-                            public void onClick(View v) {
-                                wantToCloseDialog = false;
-                                if (!_edt_lock_password.getText().toString().isEmpty()) {
-                                    connectToInternet(mSSIDForConnectESP8266ToInternet, _edt_lock_password.getText().toString());
-                                    wantToCloseDialog = true;
+                try {
+                    _lsv_internet_network.setAdapter(null);
+                    mWifiNetworks = Utilities.parseESPAvailableNetworksResponse(response.toString());
+                    mArrayAdapter = new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, mWifiNetworks);
+                    _lsv_internet_network.setAdapter(mArrayAdapter);
+                    _lsv_internet_network.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                            mSSIDForConnectESP8266ToInternet = mWifiNetworks.get(i);
+                            builder = (new AlertDialog.Builder(getActivity())).setView(getActivity().getLayoutInflater().inflate(
+                                    R.layout.layout_dialog_wifi_password, null)).setNegativeButton(R.string.dialog_button_discard,
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int whichButton) {
+                                            dialogView.dismiss();
+                                        }
+                                    }).setPositiveButton(R.string.dialog_button_confirm, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int whichButton) {
                                 }
+                            }).setTitle(getString(R.string.dialog_enter_password) + mWifiNetworks.get(i));
+                            dialogView = builder.create();
+                            dialogView.show();
 
-                                if (wantToCloseDialog)
-                                    dialogView.dismiss();
+                            _edt_lock_password = dialogView.findViewById(R.id.edt_lock_password);
+                            _edt_lock_name = dialogView.findViewById(R.id.edt_lock_name);
+                            _edt_lock_name.setVisibility(View.GONE);
 
-                            }
-                        });
-                    }
-                });
+                            dialogView.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new android.view.View.OnClickListener() {
+                                public void onClick(View v) {
+                                    wantToCloseDialog = false;
+                                    if (!_edt_lock_password.getText().toString().isEmpty()) {
+                                        connectToInternet(mSSIDForConnectESP8266ToInternet, _edt_lock_password.getText().toString());
+                                        wantToCloseDialog = true;
+                                    }
+
+                                    if (wantToCloseDialog)
+                                        dialogView.dismiss();
+                                }
+                            });
+                        }
+                    });
+                } catch (Exception e) {
+                    Log.e(getTag(), e.getMessage());
+                }
             }
         }, new ErrorListener() {
             public void onErrorResponse(VolleyError error) {
@@ -148,7 +136,11 @@ public class ConnectLockToInternetFragment extends Fragment {
         String url = getString(R.string.esp_http_address_connect);
         StringRequest MyStringRequest = new StringRequest(Request.Method.POST, url, new Listener() {
             public void onResponse(Object response) {
-                Utilities.showSnackBarMessage(getView(), response.toString(), Snackbar.LENGTH_INDEFINITE).show();
+                try{
+                    Utilities.showSnackBarMessage(getView(), response.toString(), Snackbar.LENGTH_INDEFINITE).show();
+                } catch (Exception e){
+                    Log.e(getTag(), e.getMessage());
+                }
             }
         }, new ErrorListener() {
             public void onErrorResponse(VolleyError error) {
@@ -170,10 +162,6 @@ public class ConnectLockToInternetFragment extends Fragment {
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
         MyRequestQueue.add(MyStringRequest);
-    }
-
-    public interface OnFragmentInteractionListener {
-        void onFragmentInteraction(Uri var1);
     }
 }
 

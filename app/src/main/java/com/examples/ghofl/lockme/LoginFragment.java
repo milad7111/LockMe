@@ -1,7 +1,5 @@
 package com.examples.ghofl.lockme;
 
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.net.ConnectivityManager;
@@ -20,7 +18,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -32,9 +29,8 @@ import com.backendless.Backendless;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
 
-import org.json.JSONException;
-
 public class LoginFragment extends Fragment {
+
     private TextInputEditText _edt_mail;
     private TextInputEditText _edt_login_password;
     private CheckBox _chbx_remember;
@@ -43,6 +39,7 @@ public class LoginFragment extends Fragment {
     private ProgressBar _prg_login;
     private String mEmail;
     private String mPassword;
+    private Snackbar mSnackbar;
 
     public LoginFragment() {
     }
@@ -52,14 +49,19 @@ public class LoginFragment extends Fragment {
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.layout_fragment_login, container, false);
+        return inflater.inflate(R.layout.layout_fragment_login, container, false);
+    }
 
-        _edt_mail = rootView.findViewById(R.id.edt_mail);
-        _edt_login_password = rootView.findViewById(R.id.edt_login_password);
-        _chbx_remember = rootView.findViewById(R.id.chbx_remember);
-        _btn_login = rootView.findViewById(R.id.btn_login);
-        _btn_skip_login = rootView.findViewById(R.id.btn_skip_login);
-        _prg_login = rootView.findViewById(R.id.prg_login);
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        _edt_mail = view.findViewById(R.id.edt_mail);
+        _edt_login_password = view.findViewById(R.id.edt_login_password);
+        _chbx_remember = view.findViewById(R.id.chbx_remember);
+        _btn_login = view.findViewById(R.id.btn_login);
+        _btn_skip_login = view.findViewById(R.id.btn_skip_login);
+        _prg_login = view.findViewById(R.id.prg_login);
 
         readMailAndPasswordFromSharedPreference();
         initializeLoginViews();
@@ -73,14 +75,17 @@ public class LoginFragment extends Fragment {
 
         _btn_skip_login.setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
-                if (Utilities.hasAdminLock(getActivity()))
+                if (Utilities.hasAdminLock(getActivity())) {
+                    try {
+                        mSnackbar.dismiss();
+                    } catch (Exception e) {
+                        Log.e(getTag(), e.getMessage());
+                    }
                     ((MainActivity) getActivity()).comeFromLogin();
-                else
+                } else
                     _btn_skip_login.setVisibility(View.INVISIBLE);
             }
         });
-
-        return rootView;
     }
 
     public void onStart() {
@@ -108,7 +113,7 @@ public class LoginFragment extends Fragment {
         if (!Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
             Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
             setVisibilityOfSkipButtonDependsOnInternetConnection();
-            Log.e(getTag(), "Wifi is off.");
+            Log.e(getTag(), getString(R.string.message_wifi_is_off));
         }
     }
 
@@ -142,6 +147,15 @@ public class LoginFragment extends Fragment {
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         setVisibilityOfSkipButtonDependsOnInternetConnection();
+                        try {
+                            mSnackbar = Utilities.showSnackBarMessage(
+                                    getView(),
+                                    getString(R.string.snackbar_message_offline),
+                                    Snackbar.LENGTH_INDEFINITE);
+                            mSnackbar.show();
+                        } catch (Exception e) {
+                            Log.e(getTag(), e.getMessage());
+                        }
                         dialog.dismiss();
                     }
                 });
@@ -176,55 +190,77 @@ public class LoginFragment extends Fragment {
                                 public void handleResponse(Object response) {
                                     _prg_login.setVisibility(View.INVISIBLE);
 
-                                    Utilities.syncDataBetweenLocalAndServer(getActivity().getBaseContext());
-                                    Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_EMAIL,
-                                            _edt_mail.getText().toString());
+                                    try {
+                                        Utilities.syncDataBetweenLocalAndServer(getActivity().getBaseContext());
+                                        Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_EMAIL,
+                                                _edt_mail.getText().toString());
 
-                                    if (_chbx_remember.isChecked())
-                                        Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_PASSWORD, _edt_login_password.getText().toString());
-                                    else
-                                        Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_PASSWORD, getString(R.string.empty_phrase));
+                                        if (_chbx_remember.isChecked())
+                                            Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_PASSWORD, _edt_login_password.getText().toString());
+                                        else
+                                            Utilities.setValueInSharedPreferenceObject(getActivity(), Utilities.TABLE_USERS_COLUMN_PASSWORD, getString(R.string.empty_phrase));
 
-                                    ((MainActivity) getActivity()).comeFromLogin();
+                                        try {
+                                            mSnackbar.dismiss();
+                                        } catch (Exception e) {
+                                            Log.e(getTag(), e.getMessage());
+                                        }
+                                        ((MainActivity) getActivity()).comeFromLogin();
+                                    } catch (Exception e) {
+                                        Log.e(getTag(), e.getMessage());
+                                    }
                                 }
 
                                 @Override
                                 public void handleFault(BackendlessFault fault) {
-                                    _prg_login.setVisibility(View.INVISIBLE);
                                     Log.e(getTag(), fault.getMessage());
 
-                                    if (fault.getCode().equals("3003") || fault.getCode().equals("IllegalArgumentException")) {
+                                    try {
+                                        _prg_login.setVisibility(View.INVISIBLE);
+                                        if (fault.getCode().equals("3003") || fault.getCode().equals("IllegalArgumentException")) {
 
-                                        //region Hide keyboard
-                                        View view = getActivity().getCurrentFocus();
-                                        if (view != null) {
-                                            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                                            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                                        }
-                                        //endregion Hide keyboard
+                                            //region Hide keyboard
+                                            View view = getActivity().getCurrentFocus();
+                                            if (view != null) {
+                                                InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                                                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                                            }
+                                            //endregion Hide keyboard
 
-                                        Utilities.showSnackBarMessage(getView(), fault.getMessage(), Snackbar.LENGTH_INDEFINITE).show();
+                                            Utilities.showSnackBarMessage(getView(), fault.getMessage(), Snackbar.LENGTH_INDEFINITE).show();
 
-                                    } else
-                                        requestConnectToNetworkOrDataMobile();
+                                        } else
+                                            requestConnectToNetworkOrDataMobile();
+                                    } catch (Exception e) {
+                                        Log.e(getTag(), e.getMessage());
+                                    }
                                 }
                             });
                 }
             }, new Response.ErrorListener() {
                 public void onErrorResponse(VolleyError error) {
                     Log.e(getTag(), error.toString());
-
-                    requestConnectToNetworkOrDataMobile();
+                    mSnackbar = Utilities.showSnackBarMessage(
+                            getView(),
+                            getString(R.string.snackbar_message_offline),
+                            Snackbar.LENGTH_INDEFINITE);
+                    mSnackbar.show();
+                    _prg_login.setVisibility(View.INVISIBLE);
                 }
             });
             MyRequestQueue.add(MyStringRequest);
         } else {
-            Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
-            Log.e(getTag(), "Wifi is off.");
-            Utilities.showSnackBarMessage(getView(), "Wifi is off, Please wait.",
-                    Snackbar.LENGTH_LONG).show();
-            _prg_login.setVisibility(View.INVISIBLE);
-            requestConnectToNetworkOrDataMobile();
+            try {
+                Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
+                Log.e(getTag(), getString(R.string.message_wifi_is_off));
+                Utilities.showSnackBarMessage(
+                        getView(),
+                        getString(R.string.message_wifi_off_wait),
+                        Snackbar.LENGTH_LONG).show();
+                _prg_login.setVisibility(View.INVISIBLE);
+            } catch (Exception e) {
+                Log.e(getTag(), e.getMessage());
+            }
         }
     }
 }

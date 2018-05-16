@@ -2,11 +2,8 @@ package com.examples.ghofl.lockme;
 
 
 import android.app.Fragment;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.LinearLayoutManager;
@@ -110,6 +107,10 @@ public class LockListFragment extends Fragment {
                     public void handleResponse(List<Lock> response) {
                         try {
                             mSyncingSnackBar.dismiss();
+                            Utilities.showSnackBarMessage(
+                                    getView(),
+                                    "Synced.",
+                                    Snackbar.LENGTH_SHORT).show();
                         } catch (Exception e) {
                             Log.e(getTag(), e.getMessage());
                         }
@@ -190,19 +191,20 @@ public class LockListFragment extends Fragment {
     private void showLocalLocks(ArrayList<JSONObject> lock_list) {
         Iterator mLockListIterator = lock_list.iterator();
 
-        while (mLockListIterator.hasNext()) {
-            JSONObject row = (JSONObject) mLockListIterator.next();
-            JSONObject mLockObject = new JSONObject();
-            try {
+        try {
+            while (mLockListIterator.hasNext()) {
+                JSONObject row = (JSONObject) mLockListIterator.next();
+                JSONObject mLockObject = new JSONObject();
+
                 mLockObject.put(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS, row.get(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS));
                 mLockObject.put(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS, row.get(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS));
                 mLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME, row.get(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME));
                 mLockObject.put(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS, row.get(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS));
                 mLockObject.put(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, row.get(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
                 mUserLockJsonObjectList.add(mLockObject);
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
+        } catch (Exception e) {
+            Log.e(getTag(), e.getMessage());
         }
     }
 
@@ -210,24 +212,28 @@ public class LockListFragment extends Fragment {
         RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
         String url = getString(R.string.backendless_base_http_url);
         StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
-            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onResponse(Object response) {
                 Log.e(getTag(), response.toString());
 
-                mSyncingSnackBar = Utilities.showSnackBarMessage(getView(), "Syncing ...", Snackbar.LENGTH_INDEFINITE);
-                mSyncingSnackBar.show();
+                try {
+                    mSyncingSnackBar = Utilities.showSnackBarMessage(getView(), getString(R.string.snackbar_message_syncing),
+                            Snackbar.LENGTH_LONG);
+                    mSyncingSnackBar.show();
 
-                if (Backendless.UserService.CurrentUser() == null)
-                    getActivity().finish();
+                    if (Backendless.UserService.CurrentUser() == null)
+                        getActivity().finish();
+                } catch (Exception e) {
+                    Log.e(getTag(), e.getMessage());
+                }
             }
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {
                 Log.e(getTag(), error.toString());
 
-                if (!Utilities.checkConnectToAnyLockWifi(getActivity().getBaseContext()).contains("Lock Wifi"))
+                if (!Utilities.checkConnectToAnyLockWifi(getActivity().getBaseContext()).contains(getString(R.string.WIFI_PREFIX_NAME)))
                     try {
-                        final Snackbar mSnackBar = Snackbar.make(getView(), "You are offline ...", Snackbar.LENGTH_INDEFINITE);
+                        final Snackbar mSnackBar = Snackbar.make(getView(), R.string.snackbar_message_offline, Snackbar.LENGTH_INDEFINITE);
                         mSnackBar.setAction(R.string.dialog_button_try_again, new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
