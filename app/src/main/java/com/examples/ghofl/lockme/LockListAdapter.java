@@ -24,7 +24,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
@@ -62,7 +61,7 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
             lock_status = mData.get(position).getBoolean(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS);
             admin_status = mData.get(position).getBoolean(Utilities.TABLE_USER_LOCK_COLUMN_ADMIN_STATUS);
             lock_name = mData.get(position).getString(Utilities.TABLE_USER_LOCK_COLUMN_LOCK_NAME);
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Log.e("LockListAdapter", e.getMessage());
         }
 
@@ -150,7 +149,7 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
                         mFragmentTransaction.addToBackStack(mContext.getString(R.string.fragment_lock_info_fragment));
                         mFragmentTransaction.commit();
 
-                    } catch (JSONException e) {
+                    } catch (Exception e) {
                         Log.e(this.getClass().getName(), e.getMessage());
                     }
                 }
@@ -166,7 +165,7 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
                         else
                             Utilities.showSnackBarMessage(mFragment.getView(), mContext.getString(R.string.message_not_admin_for_lock),
                                     Snackbar.LENGTH_LONG).show();
-                    } catch (JSONException e) {
+                    } catch (Exception e) {
                         Log.e(this.getClass().getName(), e.getMessage());
                     }
                 }
@@ -184,44 +183,49 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
         }
     }
 
-    private void checkDirectConnection(final int position) throws JSONException {
+    private void checkDirectConnection(final int position) {
         String mConnectedWifiName = Utilities.checkConnectToAnyLockWifi(mContext).replace("\"", "");
-        String mWifiNameOfSelectedLock = Utilities.getLockFromLocalWithSerialNumber(
-                mContext,
-                mData.get(position)
-                        .getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
-                .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID);
+        String mWifiNameOfSelectedLock = null;
+        try {
+            mWifiNameOfSelectedLock = Utilities.getLockFromLocalWithSerialNumber(
+                    mContext,
+                    mData.get(position)
+                            .getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
+                    .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID);
 
-        if (!mConnectedWifiName.equals(mWifiNameOfSelectedLock)) {
-            WifiConfiguration wifiConfig = new WifiConfiguration();
-            WifiManager mWifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            wifiConfig.SSID = String.format("\"%s\"",
-                    Utilities.getLockFromLocalWithSerialNumber(mContext, mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
-                            .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID));
+            if (!mConnectedWifiName.equals(mWifiNameOfSelectedLock)) {
+                WifiConfiguration wifiConfig = new WifiConfiguration();
+                WifiManager mWifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                wifiConfig.SSID = String.format("\"%s\"",
+                        Utilities.getLockFromLocalWithSerialNumber(mContext, mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
+                                .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID));
 
-            wifiConfig.preSharedKey = String.format("\"%s\"", mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
-            wifiConfig.allowedKeyManagement.set(1);
-            int netId = mWifiManager.addNetwork(wifiConfig);
-            if (netId == -1) {
-                Log.i(getClass().getName(), mContext.getString(R.string.error_wifi_initialization));
-            } else {
-                List<WifiConfiguration> list = mWifiManager.getConfiguredNetworks();
-                Iterator<WifiConfiguration> mWifiManagerConfiguredNetworks = list.iterator();
+                wifiConfig.preSharedKey = String.format("\"%s\"", mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
+                wifiConfig.allowedKeyManagement.set(1);
+                int netId = mWifiManager.addNetwork(wifiConfig);
+                if (netId == -1) {
+                    Log.i(getClass().getName(), mContext.getString(R.string.error_wifi_initialization));
+                } else {
+                    List<WifiConfiguration> list = mWifiManager.getConfiguredNetworks();
+                    Iterator<WifiConfiguration> mWifiManagerConfiguredNetworks = list.iterator();
 
-                while (mWifiManagerConfiguredNetworks.hasNext()) {
-                    WifiConfiguration i = mWifiManagerConfiguredNetworks.next();
-                    if (i.SSID != null && i.SSID.equals(String.format("\"%s\"",
-                            Utilities.getLockFromLocalWithSerialNumber(mContext, mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
-                                    .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID)))) {
-                        if (mWifiManager.enableNetwork(i.networkId, true)) {
-                            mWifiManager.saveConfiguration();
+                    while (mWifiManagerConfiguredNetworks.hasNext()) {
+                        WifiConfiguration i = mWifiManagerConfiguredNetworks.next();
+                        if (i.SSID != null && i.SSID.equals(String.format("\"%s\"",
+                                Utilities.getLockFromLocalWithSerialNumber(mContext, mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
+                                        .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID)))) {
+                            if (mWifiManager.enableNetwork(i.networkId, true)) {
+                                mWifiManager.saveConfiguration();
+                            }
+                            break;
                         }
-                        break;
                     }
                 }
-            }
 
-            Utilities.sleepSomeTime(3000);
+                Utilities.sleepSomeTime(3000);
+            }
+        } catch (Exception e) {
+            Log.e(this.getClass().getName(), e.getMessage());
         }
 
         RequestQueue MyRequestQueue = Volley.newRequestQueue(mContext);
@@ -245,7 +249,7 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
 
                     mFragmentTransaction.addToBackStack(mContext.getString(R.string.fragment_lock_info_fragment));
                     mFragmentTransaction.commit();
-                } catch (JSONException e) {
+                } catch (Exception e) {
                     Log.e(this.getClass().getName(), e.getMessage());
                 }
             }

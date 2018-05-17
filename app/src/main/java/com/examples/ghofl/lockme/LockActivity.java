@@ -15,6 +15,7 @@ import java.util.HashMap;
 
 public class LockActivity extends AppCompatActivity {
     public BackendlessUser mCurrentUser;
+    private FragmentManager mFragmentManager;
 
     public LockActivity() {
     }
@@ -26,10 +27,11 @@ public class LockActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         mCurrentUser = Backendless.UserService.CurrentUser();
         checkExistSavedLock();
+        mFragmentManager = getFragmentManager();
     }
 
     public void LoadFragment(Fragment fragment, String tag) {
-        FragmentManager mFragmentManager = getFragmentManager();
+        mFragmentManager = getFragmentManager();
         FragmentTransaction mFragmentTransaction = mFragmentManager.beginTransaction();
         mFragmentTransaction.replace(R.id.frml_lock_fragments, fragment, tag);
         mFragmentTransaction.addToBackStack(tag);
@@ -51,6 +53,28 @@ public class LockActivity extends AppCompatActivity {
                 LoadFragment(new NoLockFragment(), getString(R.string.fragment_no_lock_fragment));
             }
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        String currentFragment = mFragmentManager.getBackStackEntryAt(mFragmentManager.getBackStackEntryCount() - 1).getName();
+        if (currentFragment.equals(getString(R.string.fragment_lock_list_fragment))) {
+            removeAllFragments();
+            finish();
+        } else if (currentFragment.equals(getString(R.string.fragment_lock_info_fragment)))
+            mFragmentManager.popBackStack();
+        else if (currentFragment.equals(getString(R.string.fragment_add_lock_fragment)))
+            mFragmentManager.popBackStack();
+        else if (currentFragment.equals(getString(R.string.fragment_connect_lock_to_internet)))
+            mFragmentManager.popBackStack();
+        else if (currentFragment.equals(getString(R.string.fragment_no_lock_fragment))) {
+            removeAllFragments();
+            finish();
+        }
+    }
+
+    private void removeAllFragments() {
+        mFragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
     }
 }
 

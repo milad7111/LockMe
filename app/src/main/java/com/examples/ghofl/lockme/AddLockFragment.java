@@ -35,7 +35,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -99,7 +98,12 @@ public class AddLockFragment extends Fragment {
     public void onStop() {
         super.onStop();
         mSnackBar.dismiss();
-        getActivity().getFragmentManager().beginTransaction().remove(this);
+
+        try {
+            getActivity().getFragmentManager().beginTransaction().remove(this);
+        } catch (Exception e) {
+            Log.e(getTag(), e.getMessage());
+        }
     }
 
     private void fillAdapterLockWifi() {
@@ -188,23 +192,27 @@ public class AddLockFragment extends Fragment {
         }
 
         public void onReceive(Context c, Intent intent) {
-            String action = intent.getAction();
-            if (action != null && action.equals(getString(R.string.action_wifi_scan_result))) {
-                mWifiLockList = mWifiManager.getScanResults();
-                mWifiLockArrayList.clear();
-                ArrayList<String> mSavedWifiNames = Utilities.getSavedLocalWifiNames(getActivity().getBaseContext());
+            try {
+                String action = intent.getAction();
+                if (action != null && action.equals(getString(R.string.action_wifi_scan_result))) {
+                    mWifiLockList = mWifiManager.getScanResults();
+                    mWifiLockArrayList.clear();
+                    ArrayList<String> mSavedWifiNames = Utilities.getSavedLocalWifiNames(getActivity().getBaseContext());
 
-                for (int i = 0; i < mWifiLockList.size(); ++i)
-                    if ((mWifiLockList.get(i)).SSID.contains(getString(R.string.WIFI_PREFIX_NAME)) &&
-                            !mSavedWifiNames.contains((mWifiLockList.get(i)).SSID)) {
-                        mWifiLockArrayList.add((mWifiLockList.get(i)).SSID);
-                    }
+                    for (int i = 0; i < mWifiLockList.size(); ++i)
+                        if ((mWifiLockList.get(i)).SSID.contains(getString(R.string.WIFI_PREFIX_NAME)) &&
+                                !mSavedWifiNames.contains((mWifiLockList.get(i)).SSID)) {
+                            mWifiLockArrayList.add((mWifiLockList.get(i)).SSID);
+                        }
 
-                getActivity().unregisterReceiver(mWifiReceiver);
-                tryAgain();
+                    getActivity().unregisterReceiver(mWifiReceiver);
+                    tryAgain();
 
-                _prg_wifi_lock_list.setVisibility(View.GONE);
-                mWifiLockArrayAdapter.notifyDataSetChanged();
+                    _prg_wifi_lock_list.setVisibility(View.GONE);
+                    mWifiLockArrayAdapter.notifyDataSetChanged();
+                }
+            }catch (Exception e) {
+                Log.e(getTag(), e.getMessage());
             }
         }
     }
@@ -231,7 +239,7 @@ public class AddLockFragment extends Fragment {
                             Integer.parseInt(Utilities.readSharedPreferenceObject(getActivity().getBaseContext(),
                                     getString(R.string.share_preference_parameter_number_of_admin_lock), String.valueOf(0))) + 1));
             goToLockInfo();
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Log.e(getTag(), e.getMessage());
         }
     }
@@ -239,36 +247,38 @@ public class AddLockFragment extends Fragment {
     public void checkConnectionToESP8266() {
         _prg_wifi_lock_list.setVisibility(View.VISIBLE);
 
-        RequestQueue MyRequestQueueForCheck = Volley.newRequestQueue(getActivity());
-        String url = getString(R.string.esp_http_address_check);
         try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        StringRequest MyStringRequestForCheck = new StringRequest(Request.Method.GET, url, new Listener() {
-            @Override
-            public void onResponse(Object response) {
-                try {
-                    Log.i(getTag(), response.toString());
-                    saveLockToLocal(false);
-                } catch (Exception e) {
-                    Log.i(getTag(), e.getMessage());
-                }
-            }
-        }, new Response.ErrorListener() {
-            public void onErrorResponse(VolleyError error) {
-                try {
-                    Log.e(getTag(), error.toString());
-                    _prg_wifi_lock_list.setVisibility(View.GONE);
-                    Utilities.showSnackBarMessage(getView(), getString(R.string.lock_wifi_strength_is_low), Snackbar.LENGTH_INDEFINITE).show();
-                } catch (Exception e){
-                    Log.i(getTag(), e.getMessage());
-                }
-            }
-        });
+            RequestQueue MyRequestQueueForCheck = Volley.newRequestQueue(getActivity());
+            String url = getString(R.string.esp_http_address_check);
 
-        MyRequestQueueForCheck.add(MyStringRequestForCheck);
+            Thread.sleep(5000);
+
+            StringRequest MyStringRequestForCheck = new StringRequest(Request.Method.GET, url, new Listener() {
+                @Override
+                public void onResponse(Object response) {
+                    try {
+                        Log.i(getTag(), response.toString());
+                        saveLockToLocal(false);
+                    } catch (Exception e) {
+                        Log.i(getTag(), e.getMessage());
+                    }
+                }
+            }, new Response.ErrorListener() {
+                public void onErrorResponse(VolleyError error) {
+                    try {
+                        Log.e(getTag(), error.toString());
+                        _prg_wifi_lock_list.setVisibility(View.GONE);
+                        Utilities.showSnackBarMessage(getView(), getString(R.string.lock_wifi_strength_is_low), Snackbar.LENGTH_INDEFINITE).show();
+                    } catch (Exception e) {
+                        Log.i(getTag(), e.getMessage());
+                    }
+                }
+            });
+
+            MyRequestQueueForCheck.add(MyStringRequestForCheck);
+        } catch (Exception e) {
+            Log.i(getTag(), e.getMessage());
+        }
     }
 
     private void goToLockInfo() {
@@ -280,34 +290,34 @@ public class AddLockFragment extends Fragment {
     }
 
     private void checkWifi() {
-        if (Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
-            fillAdapterLockWifi();
-            _prg_wifi_lock_list.setVisibility(View.VISIBLE);
-        } else {
-           try {
-               _prg_wifi_lock_list.setVisibility(View.GONE);
-               mSnackBar = Utilities.showSnackBarMessage(getView(), "Turn on WIFI", Snackbar.LENGTH_INDEFINITE);
-               mSnackBar.setAction(R.string.dialog_button_confirm, new View.OnClickListener() {
-                   @Override
-                   public void onClick(View view) {
-                       Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
-                       mSnackBar.dismiss();
-                       _prg_wifi_lock_list.setVisibility(View.VISIBLE);
+        try {
+            if (Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
+                fillAdapterLockWifi();
+                _prg_wifi_lock_list.setVisibility(View.VISIBLE);
+            } else {
+                _prg_wifi_lock_list.setVisibility(View.GONE);
+                mSnackBar = Utilities.showSnackBarMessage(getView(), "Turn on WIFI", Snackbar.LENGTH_INDEFINITE);
+                mSnackBar.setAction(R.string.dialog_button_confirm, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
+                        mSnackBar.dismiss();
+                        _prg_wifi_lock_list.setVisibility(View.VISIBLE);
 
-                       try {
-                           Thread.sleep(3000);
-                           _prg_wifi_lock_list.setVisibility(View.GONE);
-                       } catch (InterruptedException e) {
-                           Log.e(getTag(), e.getMessage());
-                       }
+                        try {
+                            Thread.sleep(3000);
+                            _prg_wifi_lock_list.setVisibility(View.GONE);
+                        } catch (InterruptedException e) {
+                            Log.e(getTag(), e.getMessage());
+                        }
 
-                       checkWifi();
-                   }
-               });
-               mSnackBar.show();
-           } catch (Exception e){
-               Log.e(getTag(), e.getMessage());
-           }
+                        checkWifi();
+                    }
+                });
+                mSnackBar.show();
+            }
+        } catch (Exception e) {
+            Log.e(getTag(), e.getMessage());
         }
     }
 
@@ -322,7 +332,7 @@ public class AddLockFragment extends Fragment {
                 }
             });
             mSnackBar.show();
-        } catch (Exception e){
+        } catch (Exception e) {
             Log.e(getTag(), e.getMessage());
         }
     }

@@ -31,7 +31,6 @@ import com.backendless.messaging.SubscriptionOptions;
 import com.backendless.persistence.DataQueryBuilder;
 import com.skyfishjy.library.RippleBackground;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
@@ -93,8 +92,12 @@ public class LockInfoFragment extends Fragment {
         //region event image connection status click
         _img_connection_status.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                ((LockActivity) getActivity()).LoadFragment(new ConnectLockToInternetFragment(),
-                        getString(R.string.fragment_connect_lock_to_internet));
+                try {
+                    ((LockActivity) getActivity()).LoadFragment(new ConnectLockToInternetFragment(),
+                            getString(R.string.fragment_connect_lock_to_internet));
+                } catch (Exception e) {
+                    Log.e(getTag(), e.getMessage());
+                }
             }
         });
         //endregion event image connection status click
@@ -103,15 +106,19 @@ public class LockInfoFragment extends Fragment {
         _img_lock_status.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!mRippleBackground.isRippleAnimationRunning()) {
-                    mRippleBackground.startRippleAnimation();
-                    if (Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
-                        requestDirectToggle();
-                    } else {
-                        Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
-                        Log.e(getTag(), "Wifi is off.");
-                        requestDirectToggle();
+                try {
+                    if (!mRippleBackground.isRippleAnimationRunning()) {
+                        mRippleBackground.startRippleAnimation();
+                        if (Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
+                            requestDirectToggle();
+                        } else {
+                            Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
+                            Log.e(getTag(), "Wifi is off.");
+                            requestDirectToggle();
+                        }
                     }
+                } catch (Exception e) {
+                    Log.e(getTag(), e.getMessage());
                 }
             }
         });
@@ -259,44 +266,40 @@ public class LockInfoFragment extends Fragment {
 
             //region read status from lock
             if (mLockInfo != null)
-                try {
-                    mLockStatus = mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS);
-                    Utilities.changeLockStatusInView(
-                            mLockStatus,
-                            _img_lock_status,
-                            _txv_lock_status);
-                    mLock.setLockStatus(mLockStatus);
+                mLockStatus = mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS);
+            Utilities.changeLockStatusInView(
+                    mLockStatus,
+                    _img_lock_status,
+                    _txv_lock_status);
+            mLock.setLockStatus(mLockStatus);
 
-                    Utilities.changeDoorStatusInView(
-                            mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS),
-                            _img_door_status,
-                            _txv_door_status,
-                            mLockStatus);
-                    mLock.setDoorStatus(mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS));
+            Utilities.changeDoorStatusInView(
+                    mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS),
+                    _img_door_status,
+                    _txv_door_status,
+                    mLockStatus);
+            mLock.setDoorStatus(mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS));
 
-                    mLockConnectionStatus = mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS);
-                    Utilities.changeConnectionStatusInView(
-                            mLockConnectionStatus,
-                            _img_connection_status);
-                    mLock.setConnectionStatus(mLockConnectionStatus);
+            mLockConnectionStatus = mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS);
+            Utilities.changeConnectionStatusInView(
+                    mLockConnectionStatus,
+                    _img_connection_status);
+            mLock.setConnectionStatus(mLockConnectionStatus);
 
-                    Utilities.changeBatteryStatusInView(
-                            mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_BATTERY_STATUS),
-                            _img_battery_status);
-                    mLock.setBatteryStatus(mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_BATTERY_STATUS));
+            Utilities.changeBatteryStatusInView(
+                    mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_BATTERY_STATUS),
+                    _img_battery_status);
+            mLock.setBatteryStatus(mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_BATTERY_STATUS));
 
-                    Utilities.changeWifiStatusInView(
-                            mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS),
-                            _img_wifi_status);
-                    mLock.setWifiStatus(mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS));
+            Utilities.changeWifiStatusInView(
+                    mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS),
+                    _img_wifi_status);
+            mLock.setWifiStatus(mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS));
 
-                    Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), mLock);
-                } catch (JSONException e) {
-                    Log.e(getTag(), e.getMessage());
-                }
+            Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), mLock);
             //endregion read status from lock
 
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Log.e(getTag(), e.getMessage());
         }
     }
@@ -333,7 +336,7 @@ public class LockInfoFragment extends Fragment {
                         mLockObjectJSONObject.getInt(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS),
                         _img_wifi_status);
             }
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Log.e(getTag(), e.getMessage());
         }
         //endregion read status from local
