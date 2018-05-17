@@ -55,6 +55,8 @@ public class LockInfoFragment extends Fragment {
     private RippleBackground mRippleBackground;
     private Snackbar mSnacbar;
 
+    private Thread mThread;
+
     public LockInfoFragment() {
     }
 
@@ -113,7 +115,7 @@ public class LockInfoFragment extends Fragment {
                             requestDirectToggle();
                         } else {
                             Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
-                            Log.e(getTag(), "Wifi is off.");
+                            Log.e(getTag(), getString(R.string.message_wifi_is_off));
                             requestDirectToggle();
                         }
                     }
@@ -140,7 +142,10 @@ public class LockInfoFragment extends Fragment {
     }
 
     private void requestDirectToggle() {
-        new Thread(new Task()).start();
+        stopThread();
+        mThread = new Thread(new Task());
+        mThread.start();
+
         if (Connection) {
             RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
             String url = getString(R.string.esp_http_address_toggle);
@@ -156,7 +161,8 @@ public class LockInfoFragment extends Fragment {
                 public void onErrorResponse(VolleyError error) {
                     Log.e(getTag(), error.toString());
                     try {
-                        Utilities.showSnackBarMessage(getView(), "Direct Order Failed.", Snackbar.LENGTH_SHORT).show();
+                        Utilities.showSnackBarMessage(getView(), getString(R.string.snackbar_message_direct_order_failed), Snackbar.LENGTH_SHORT).show();
+                        mRippleBackground.stopRippleAnimation();
                     } catch (Exception e) {
                         Log.e(getTag(), e.getMessage());
                     }
@@ -174,6 +180,7 @@ public class LockInfoFragment extends Fragment {
     }
 
     private void requestOnlineToggle() {
+        mMessageDeliver = false;
         PublishOptions mPublishOptions = new PublishOptions();
         mPublishOptions.setSubtopic(mLockSerialNumber);
         Backendless.Messaging.publish(getString(R.string.channel_toggle), getString(R.string.command_toggle),
@@ -185,28 +192,20 @@ public class LockInfoFragment extends Fragment {
                             try {
                                 mSnacbar = Utilities.showSnackBarMessage(
                                         getView(),
-                                        "Command sent, Waiting for response ...",
+                                        getString(R.string.snackbar_message_command_sent),
                                         Snackbar.LENGTH_SHORT);
                                 mSnacbar.show();
                             } catch (Exception e) {
                                 Log.e(getTag(), e.getMessage());
                             }
-
-                            mMessageDeliver = true;
                             setAppSubscriber();
                         }
                     }
 
                     public void handleFault(BackendlessFault backendlessFault) {
-                        try {
-                            Log.e(getTag(), backendlessFault.getMessage());
-                            Utilities.showSnackBarMessage(getView(), "Nothing received.", Snackbar.LENGTH_SHORT).show();
-
-                            mMessageDeliver = false;
-                            mRippleBackground.stopRippleAnimation();
-                        } catch (Exception e) {
-                            Log.e(getTag(), e.getMessage());
-                        }
+                        Log.e(getTag(), backendlessFault.getMessage());
+                        Utilities.showSnackBarMessage(getView(), getString(R.string.log_cannot_connect), Snackbar.LENGTH_SHORT).show();
+                        mRippleBackground.stopRippleAnimation();
                     }
                 });
     }
@@ -217,23 +216,26 @@ public class LockInfoFragment extends Fragment {
         Backendless.Messaging.subscribe(getString(R.string.channel_response_toggle), new AsyncCallback<List<Message>>() {
                     public void handleResponse(List<Message> response) {
                         Log.i(getTag(), response.toString());
+                        mMessageDeliver = true;
                         readServerStatus();
+                        mRippleBackground.stopRippleAnimation();
                     }
 
                     public void handleFault(BackendlessFault fault) {
                         Log.e(getTag(), fault.getMessage());
-                        mRippleBackground.stopRippleAnimation();
+                        mMessageDeliver = false;
                     }
                 },
                 mSubscriptionOptions, new AsyncCallback<Subscription>() {
                     public void handleResponse(Subscription response) {
                         Log.e(getTag(), response.toString());
-//                        Subscription mSubscription = response;
-//                        mSubscription.cancelSubscription();
+                        Subscription mSubscription = response;
+                        mSubscription.cancelSubscription();
                     }
 
                     public void handleFault(BackendlessFault fault) {
                         Log.e(getTag(), fault.getMessage());
+                        mRippleBackground.stopRippleAnimation();
                     }
                 });
     }
@@ -252,6 +254,7 @@ public class LockInfoFragment extends Fragment {
         }, new Response.ErrorListener() {
             public void onErrorResponse(VolleyError error) {
                 Log.e(getTag(), error.toString());
+                mRippleBackground.stopRippleAnimation();
                 Connection = false;
                 readServerStatus();
             }
@@ -386,8 +389,6 @@ public class LockInfoFragment extends Fragment {
 
                         Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), locks.get(0));
                     }
-
-                    mRippleBackground.stopRippleAnimation();
                 } catch (Exception e) {
                     Log.e(getTag(), e.getMessage());
                 }
@@ -395,7 +396,6 @@ public class LockInfoFragment extends Fragment {
 
             public void handleFault(BackendlessFault backendlessFault) {
                 Log.e(getTag(), backendlessFault.getMessage());
-                mRippleBackground.stopRippleAnimation();
             }
         });
         //endregion read status from server
@@ -406,16 +406,34 @@ public class LockInfoFragment extends Fragment {
         public void run() {
             try {
                 Thread.sleep(5000);
-                if (!mMessageDeliver)
-                    try {
-                        mSnacbar.dismiss();
-                    } catch (Exception e) {
-                        Log.e(getTag(), e.getMessage());
-                    }
-                getStatusFromDirectConnection();
+                nothingReceived();
             } catch (Exception e) {
                 Log.e(getTag(), e.getMessage());
             }
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        stopThread();
+    }
+
+    private void stopThread() {
+        try {
+            mThread.stop();
+        } catch (Exception e) {
+            Log.e(getTag(), e.toString());
+        }
+    }
+
+    private void nothingReceived() {
+        try {
+            if (!mMessageDeliver)
+                Utilities.showSnackBarMessage(getView(), "Nothing received.", Snackbar.LENGTH_SHORT).show();
+            getStatusFromDirectConnection();
+        } catch (Exception e) {
+            Log.e(getTag(), e.getMessage());
         }
     }
 }

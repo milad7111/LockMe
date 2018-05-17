@@ -111,5 +111,7 @@
     <string name="message_wifi_off_wait">Wifi is off, Please wait.</string>
     <string name="channel_response_toggle">response_toggle</string>
     <string name="channel_toggle">toggle</string>
+    <string name="snackbar_message_direct_order_failed">Direct Order Failed.</string>
+    <string name="snackbar_message_command_sent">Command sent, Waiting for response ...</string>
 </resources>
 
