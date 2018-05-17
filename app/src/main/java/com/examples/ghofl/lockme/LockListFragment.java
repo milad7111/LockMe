@@ -25,7 +25,6 @@ import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
 import com.backendless.persistence.DataQueryBuilder;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -77,7 +76,11 @@ public class LockListFragment extends Fragment {
         if (fab != null) {
             fab.setOnClickListener(new OnClickListener() {
                 public void onClick(View view) {
-                    ((LockActivity) getActivity()).LoadFragment(new AddLockFragment(), getString(R.string.fragment_add_lock_fragment));
+                    try {
+                        ((LockActivity) getActivity()).LoadFragment(new AddLockFragment(), getString(R.string.fragment_add_lock_fragment));
+                    } catch (Exception e) {
+                        Log.e(getTag(), e.getMessage());
+                    }
                 }
             });
         }
@@ -85,8 +88,13 @@ public class LockListFragment extends Fragment {
 
     public void onStart() {
         super.onStart();
-        checkInternetConnection();
-        getAllSavedLock();
+
+        try {
+            checkInternetConnection();
+            getAllSavedLock();
+        } catch (Exception e) {
+            Log.e(getTag(), e.getMessage());
+        }
     }
 
     private void getAllSavedLock() {
@@ -132,13 +140,13 @@ public class LockListFragment extends Fragment {
     }
 
     private void updateLocalInfoAboutLocks(List<Lock> lock_list) {
+        try {
+            Utilities.setValueInSharedPreferenceObject(getActivity().getBaseContext(), "locks", getString(R.string.empty_phrase));
+            JSONObject mLock;
+            int numberOfAdminStatus = 0;
 
-        Utilities.setValueInSharedPreferenceObject(getActivity().getBaseContext(), "locks", getString(R.string.empty_phrase));
-        JSONObject mLock;
-        int numberOfAdminStatus = 0;
+            for (int i = 0; i < lock_list.size(); i++) {
 
-        for (int i = 0; i < lock_list.size(); i++) {
-            try {
                 Lock mLockObject = lock_list.get(i);
                 mLock = new JSONObject();
                 mLock.put(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, mLockObject.getSerialNumber().getSerialNumber());
@@ -155,14 +163,14 @@ public class LockListFragment extends Fragment {
                 Utilities.addUserLockInLocal(getActivity(), mLock);
                 if (mLockObject.getAdminStatus(0))
                     numberOfAdminStatus++;
-            } catch (JSONException e) {
-                Log.e(getTag(), e.getMessage());
             }
-        }
 
-        Utilities.setValueInSharedPreferenceObject(getActivity().getBaseContext(),
-                getString(R.string.share_preference_parameter_number_of_admin_lock),
-                String.valueOf(numberOfAdminStatus));
+            Utilities.setValueInSharedPreferenceObject(getActivity().getBaseContext(),
+                    getString(R.string.share_preference_parameter_number_of_admin_lock),
+                    String.valueOf(numberOfAdminStatus));
+        } catch (Exception e) {
+            Log.e(getTag(), e.getMessage());
+        }
     }
 
     private void showServerLocks(List<Lock> lock_list) {
@@ -180,8 +188,8 @@ public class LockListFragment extends Fragment {
                 mUserLockJsonObjectList.add(mLockObject);
 
                 Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), lock_list.get(i));
-            } catch (JSONException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                Log.e(getTag(), e.getMessage());
             }
         }
 

@@ -25,7 +25,6 @@ import com.backendless.exceptions.BackendlessFault;
 import com.backendless.persistence.DataQueryBuilder;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Method;
@@ -110,7 +109,7 @@ public class Utilities {
             mUserLocks.put(userlock);
             setValueInSharedPreferenceObject(context, "locks", mUserLocks.toString());
 
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Log.e("Utilities", e.getMessage());
         }
     }
@@ -128,7 +127,7 @@ public class Utilities {
                     return mLockObject;
                 }
             }
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Log.e("Utilities", e.getMessage());
         }
 
@@ -148,7 +147,7 @@ public class Utilities {
                 mListOfWifiNames.add((new JSONObject(e.get(i).toString())).get(TABLE_LOCK_COLUMN_LOCK_SSID).toString());
 
             return mListOfWifiNames;
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Log.e("Utilities", e.getMessage());
             return new ArrayList();
         }
@@ -167,7 +166,7 @@ public class Utilities {
             }
 
             return mLockList;
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Log.e("Utilities", e.getMessage());
             return null;
         }
@@ -212,7 +211,7 @@ public class Utilities {
 
             return mNetworksSSIDArrayList;
 
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Log.e("Utilities", e.getMessage());
 
             return new ArrayList<>();
@@ -240,7 +239,7 @@ public class Utilities {
                     mUnsavedLocks.add(local_locks.get(i));
 
             return mUnsavedLocks;
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Log.e("Utilities", e.getMessage());
         }
 
@@ -328,7 +327,7 @@ public class Utilities {
                     }
                 });
             }
-        } catch (JSONException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -358,7 +357,7 @@ public class Utilities {
             }
 
             setValueInSharedPreferenceObject(context, "locks", mLocalSavedUserLocks.toString());
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Log.e("Utilities", e.getMessage());
         }
     }
@@ -377,7 +376,7 @@ public class Utilities {
                 }
 
             setValueInSharedPreferenceObject(context, "locks", mLocalSavedUserLocks.toString());
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Log.e("Utilities", e.getMessage());
         }
     }
