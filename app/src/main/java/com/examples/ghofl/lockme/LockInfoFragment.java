@@ -55,6 +55,8 @@ public class LockInfoFragment extends Fragment {
     private RippleBackground mRippleBackground;
     private Snackbar mSnacbar;
 
+    private RequestQueue mRequestQueue;
+
     private Thread mThread;
 
     public LockInfoFragment() {
@@ -66,6 +68,7 @@ public class LockInfoFragment extends Fragment {
         queryBuilder = DataQueryBuilder.create();
         Connection = false;
         mMessageDeliver = false;
+        mRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -89,12 +92,25 @@ public class LockInfoFragment extends Fragment {
 
         mRippleBackground = view.findViewById(R.id.ripple_background);
 
-        getStatusFromDirectConnection();
+        try {
+            if (getArguments() != null && getArguments().getString("CheckStatus") != null)
+                saveUpdatedStatusOfLockInLocal(getArguments().getString("CheckStatus"));
+            else
+                getStatusFromDirectConnection();
+        } catch (Exception e) {
+            Log.e(getTag(), e.getMessage());
+        }
 
         //region event image connection status click
         _img_connection_status.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 try {
+                    mRequestQueue.cancelAll(new RequestQueue.RequestFilter() {
+                        @Override
+                        public boolean apply(Request<?> request) {
+                            return true;
+                        }
+                    });
                     ((LockActivity) getActivity()).LoadFragment(new ConnectLockToInternetFragment(),
                             getString(R.string.fragment_connect_lock_to_internet));
                 } catch (Exception e) {
@@ -135,9 +151,7 @@ public class LockInfoFragment extends Fragment {
     private void updateImageResourceAndTexts() {
         if (getArguments() != null) {
             mLockSerialNumber = getArguments().getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER);
-
             readLocalStatus();
-            getStatusFromDirectConnection();
         }
     }
 
@@ -147,14 +161,13 @@ public class LockInfoFragment extends Fragment {
         mThread.start();
 
         if (Connection) {
-            RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
             String url = getString(R.string.esp_http_address_toggle);
             StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
                 @Override
                 public void onResponse(Object response) {
                     Log.e(getTag(), response.toString());
                     mMessageDeliver = true;
-                    saveUpdatedStatusOfLockInLocal(response.toString());
+                    getStatusFromDirectConnection();
                     mRippleBackground.stopRippleAnimation();
                 }
             }, new Response.ErrorListener() {
@@ -174,7 +187,7 @@ public class LockInfoFragment extends Fragment {
                     DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                     DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
-            MyRequestQueue.add(MyStringRequest);
+            mRequestQueue.add(MyStringRequest);
         } else
             requestOnlineToggle();
     }
@@ -241,7 +254,6 @@ public class LockInfoFragment extends Fragment {
     }
 
     private void getStatusFromDirectConnection() {
-        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
         String url = getString(R.string.esp_http_address_check);
         StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
             @Override
@@ -256,10 +268,17 @@ public class LockInfoFragment extends Fragment {
                 Log.e(getTag(), error.toString());
                 mRippleBackground.stopRippleAnimation();
                 Connection = false;
+
+                try {
+                    getStatusFromDirectConnection();
+                } catch (Exception e) {
+                    Log.e(getTag(), e.getMessage());
+                }
+
                 readServerStatus();
             }
         });
-        MyRequestQueue.add(MyStringRequest);
+        mRequestQueue.add(MyStringRequest);
     }
 
     private void saveUpdatedStatusOfLockInLocal(String responseValue) {
@@ -268,40 +287,40 @@ public class LockInfoFragment extends Fragment {
             Lock mLock = new Lock();
 
             //region read status from lock
-            if (mLockInfo != null)
+            if (mLockInfo != null) {
                 mLockStatus = mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_LOCK_STATUS);
-            Utilities.changeLockStatusInView(
-                    mLockStatus,
-                    _img_lock_status,
-                    _txv_lock_status);
-            mLock.setLockStatus(mLockStatus);
+                Utilities.changeLockStatusInView(
+                        mLockStatus,
+                        _img_lock_status,
+                        _txv_lock_status);
+                mLock.setLockStatus(mLockStatus);
 
-            Utilities.changeDoorStatusInView(
-                    mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS),
-                    _img_door_status,
-                    _txv_door_status,
-                    mLockStatus);
-            mLock.setDoorStatus(mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS));
+                Utilities.changeDoorStatusInView(
+                        mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS),
+                        _img_door_status,
+                        _txv_door_status,
+                        mLockStatus);
+                mLock.setDoorStatus(mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_DOOR_STATUS));
 
-            mLockConnectionStatus = mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS);
-            Utilities.changeConnectionStatusInView(
-                    mLockConnectionStatus,
-                    _img_connection_status);
-            mLock.setConnectionStatus(mLockConnectionStatus);
+                mLockConnectionStatus = mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS);
+                Utilities.changeConnectionStatusInView(
+                        mLockConnectionStatus,
+                        _img_connection_status);
+                mLock.setConnectionStatus(mLockConnectionStatus);
 
-            Utilities.changeBatteryStatusInView(
-                    mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_BATTERY_STATUS),
-                    _img_battery_status);
-            mLock.setBatteryStatus(mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_BATTERY_STATUS));
+                Utilities.changeBatteryStatusInView(
+                        mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_BATTERY_STATUS),
+                        _img_battery_status);
+                mLock.setBatteryStatus(mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_BATTERY_STATUS));
 
-            Utilities.changeWifiStatusInView(
-                    mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS),
-                    _img_wifi_status);
-            mLock.setWifiStatus(mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS));
+                Utilities.changeWifiStatusInView(
+                        mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS),
+                        _img_wifi_status);
+                mLock.setWifiStatus(mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS));
 
-            Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), mLock);
-            //endregion read status from lock
-
+                Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), mLock);
+                //endregion read status from lock
+            }
         } catch (Exception e) {
             Log.e(getTag(), e.getMessage());
         }
@@ -431,7 +450,6 @@ public class LockInfoFragment extends Fragment {
         try {
             if (!mMessageDeliver)
                 Utilities.showSnackBarMessage(getView(), "Nothing received.", Snackbar.LENGTH_SHORT).show();
-            getStatusFromDirectConnection();
         } catch (Exception e) {
             Log.e(getTag(), e.getMessage());
         }

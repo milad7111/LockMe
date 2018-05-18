@@ -15,15 +15,19 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
 import com.android.volley.Response.ErrorListener;
 import com.android.volley.Response.Listener;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,16 +42,21 @@ public class ConnectLockToInternetFragment extends Fragment {
 
     private EditText _edt_lock_password;
     private EditText _edt_lock_name;
+    private ProgressBar _prg_internet_networks;
 
     private AlertDialog.Builder builder;
     private AlertDialog dialogView;
     private String mSSIDForConnectESP8266ToInternet;
+
+    private Thread mThread;
+    private RequestQueue mRequestQueue;
 
     public ConnectLockToInternetFragment() {
     }
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -59,6 +68,7 @@ public class ConnectLockToInternetFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         _lsv_internet_network = view.findViewById(R.id.lsv_internet_network);
+        _prg_internet_networks = view.findViewById(R.id.prg_internet_networks);
     }
 
     public void onStart() {
@@ -67,11 +77,11 @@ public class ConnectLockToInternetFragment extends Fragment {
     }
 
     private void getListOfAvailableNetworks() {
-        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity());
         String url = getString(R.string.esp_http_address_networks);
         StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Listener() {
             @Override
             public void onResponse(Object response) {
+                _prg_internet_networks.setVisibility(View.GONE);
                 try {
                     _lsv_internet_network.setAdapter(null);
                     mWifiNetworks = Utilities.parseESPAvailableNetworksResponse(response.toString());
@@ -118,6 +128,7 @@ public class ConnectLockToInternetFragment extends Fragment {
         }, new ErrorListener() {
             public void onErrorResponse(VolleyError error) {
                 Log.e(getTag(), error.toString());
+                getActivity().getFragmentManager().popBackStack();
             }
         });
 
@@ -126,22 +137,30 @@ public class ConnectLockToInternetFragment extends Fragment {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
-        MyRequestQueue.add(MyStringRequest);
+        mRequestQueue.add(MyStringRequest);
     }
 
     private void connectToInternet(final String ssid, final String password) {
-        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity());
+        _prg_internet_networks.setVisibility(View.VISIBLE);
+
+        stopThread();
+        mThread = new Thread(new Task());
+        mThread.start();
+
         String url = getString(R.string.esp_http_address_connect);
         StringRequest MyStringRequest = new StringRequest(Request.Method.POST, url, new Listener() {
             public void onResponse(Object response) {
-                try{
-                    Utilities.showSnackBarMessage(getView(), response.toString(), Snackbar.LENGTH_INDEFINITE).show();
-                } catch (Exception e){
+                try {
+                    _prg_internet_networks.setVisibility(View.GONE);
+                    Utilities.showSnackBarMessage(getView(), response.toString(), Snackbar.LENGTH_SHORT).show();
+                    getActivity().getFragmentManager().popBackStack();
+                } catch (Exception e) {
                     Log.e(getTag(), e.getMessage());
                 }
             }
         }, new ErrorListener() {
             public void onErrorResponse(VolleyError error) {
+                _prg_internet_networks.setVisibility(View.GONE);
                 Log.e(getTag(), error.toString());
             }
         }) {
@@ -159,7 +178,71 @@ public class ConnectLockToInternetFragment extends Fragment {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
-        MyRequestQueue.add(MyStringRequest);
+        mRequestQueue.add(MyStringRequest);
+    }
+
+    private void getStatusFromDirectConnection() {
+        String url = getString(R.string.esp_http_address_check);
+        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+            @Override
+            public void onResponse(Object response) {
+                Log.e(getTag(), response.toString());
+
+                JSONObject mLockInfo;
+                try {
+                    _prg_internet_networks.setVisibility(View.GONE);
+                    mLockInfo = new JSONObject(response.toString());
+                    if (mLockInfo != null && mLockInfo.getBoolean(Utilities.TABLE_LOCK_COLUMN_CONNECTION_STATUS)) {
+                        Utilities.showSnackBarMessage(getView(), "Lock Successfully connected to internet.", Snackbar.LENGTH_LONG).show();
+                        getActivity().getFragmentManager().popBackStack();
+                    } else
+                        Utilities.showSnackBarMessage(getView(), "Lock did not connect to internet, try again.", Snackbar.LENGTH_LONG).show();
+                } catch (Exception e) {
+                    Log.e(getTag(), e.getMessage());
+                }
+            }
+        }, new Response.ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+                Log.e(getTag(), error.toString());
+            }
+        });
+        mRequestQueue.add(MyStringRequest);
+    }
+
+    class Task implements Runnable {
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(3000);
+                getStatusFromDirectConnection();
+            } catch (Exception e) {
+                Log.e(getTag(), e.getMessage());
+            }
+        }
+    }
+
+    private void stopThread() {
+        try {
+            mThread.stop();
+        } catch (Exception e) {
+            Log.e(getTag(), e.toString());
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        try {
+            mRequestQueue.cancelAll(new RequestQueue.RequestFilter() {
+                @Override
+                public boolean apply(Request<?> request) {
+                    return true;
+                }
+            });
+        } catch (Exception e) {
+            Log.e(getTag(), e.getMessage());
+        }
     }
 }
 

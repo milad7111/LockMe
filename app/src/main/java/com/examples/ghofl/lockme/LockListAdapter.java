@@ -75,7 +75,7 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
                 holder._img_connection_status_list);
 
         holder._txv_lock_name.setText(lock_name);
-        holder._txv_is_admin.setText((admin_status) ? "you are admin" : "member");
+        holder._txv_is_admin.setText(String.format("you are %s", (admin_status) ? "admin" : "member"));
     }
 
     @Override
@@ -239,6 +239,7 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
                     Bundle mLockInfoFragmentBundle = new Bundle();
                     mLockInfoFragmentBundle.putString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER
                             , mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
+                    mLockInfoFragmentBundle.putString("CheckStatus", response.toString());
                     LockInfoFragment mLockInfoFragment = new LockInfoFragment();
                     mLockInfoFragment.setArguments(mLockInfoFragmentBundle);
 
