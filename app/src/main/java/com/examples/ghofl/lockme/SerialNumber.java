@@ -1,7 +1,6 @@
 package com.examples.ghofl.lockme;
 
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by family on 4/24/2018.
@@ -10,10 +9,15 @@ import java.util.List;
 public class SerialNumber {
 
     private String objectId;
+
     private String serial_number;
+
     private String configuration;
+
     private String generation;
+
     private String mac_address;
+
     private Date created;
     private Date updated;
 

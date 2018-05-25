@@ -94,7 +94,10 @@ public class LockInfoFragment extends Fragment {
 
         try {
             if (getArguments() != null && getArguments().getString("CheckStatus") != null)
+            {
                 saveUpdatedStatusOfLockInLocal(getArguments().getString("CheckStatus"));
+                Connection = true;
+            }
             else
                 getStatusFromDirectConnection();
         } catch (Exception e) {
@@ -127,13 +130,13 @@ public class LockInfoFragment extends Fragment {
                 try {
                     if (!mRippleBackground.isRippleAnimationRunning()) {
                         mRippleBackground.startRippleAnimation();
-                        if (Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
+//                        if (Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
+//                            requestDirectToggle();
+//                        } else {
+//                            Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
+//                            Log.e(getTag(), getString(R.string.message_wifi_is_off));
                             requestDirectToggle();
-                        } else {
-                            Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
-                            Log.e(getTag(), getString(R.string.message_wifi_is_off));
-                            requestDirectToggle();
-                        }
+//                        }
                     }
                 } catch (Exception e) {
                     Log.e(getTag(), e.getMessage());
@@ -269,11 +272,11 @@ public class LockInfoFragment extends Fragment {
                 mRippleBackground.stopRippleAnimation();
                 Connection = false;
 
-                try {
-                    getStatusFromDirectConnection();
-                } catch (Exception e) {
-                    Log.e(getTag(), e.getMessage());
-                }
+//                try {
+//                    getStatusFromDirectConnection();
+//                } catch (Exception e) {
+//                    Log.e(getTag(), e.getMessage());
+//                }
 
                 readServerStatus();
             }
@@ -318,7 +321,7 @@ public class LockInfoFragment extends Fragment {
                         _img_wifi_status);
                 mLock.setWifiStatus(mLockInfo.getInt(Utilities.TABLE_LOCK_COLUMN_WIFI_STATUS));
 
-                Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), mLock);
+                Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), mLock, mLockSerialNumber);
                 //endregion read status from lock
             }
         } catch (Exception e) {
@@ -406,7 +409,7 @@ public class LockInfoFragment extends Fragment {
                                 locks.get(0).getWifiStatus(),
                                 _img_wifi_status);
 
-                        Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), locks.get(0));
+                        Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), locks.get(0), mLockSerialNumber);
                     }
                 } catch (Exception e) {
                     Log.e(getTag(), e.getMessage());

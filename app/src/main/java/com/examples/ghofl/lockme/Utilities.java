@@ -332,7 +332,7 @@ public class Utilities {
         }
     }
 
-    public static void setStatusInLocalForALock(Context context, Lock lock) {
+    public static void setStatusInLocalForALock(Context context, Lock lock, String serialNumber) {
         try {
             JSONArray mLocalSavedUserLocks = new JSONArray(
                     readSharedPreferenceObject(context, "locks", "").equals("")
@@ -340,20 +340,26 @@ public class Utilities {
                             : readSharedPreferenceObject(context, "locks", ""));
 
             for (int i = 0; i < mLocalSavedUserLocks.length(); i++) {
-                mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(
-                        TABLE_LOCK_COLUMN_CONNECTION_STATUS, lock.getConnectionStatus()));
+                if (new JSONObject(mLocalSavedUserLocks.get(i).toString())
+                        .getString(TABLE_LOCK_COLUMN_SERIAL_NUMBER)
+                        .equals(serialNumber)) {
+                    mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(
+                            TABLE_LOCK_COLUMN_CONNECTION_STATUS, lock.getConnectionStatus()));
 
-                mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(
-                        TABLE_LOCK_COLUMN_WIFI_STATUS, lock.getWifiStatus()));
+                    mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(
+                            TABLE_LOCK_COLUMN_WIFI_STATUS, lock.getWifiStatus()));
 
-                mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(
-                        TABLE_LOCK_COLUMN_LOCK_STATUS, lock.getLockStatus()));
+                    mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(
+                            TABLE_LOCK_COLUMN_LOCK_STATUS, lock.getLockStatus()));
 
-                mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(
-                        TABLE_LOCK_COLUMN_DOOR_STATUS, lock.getDoorStatus()));
+                    mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(
+                            TABLE_LOCK_COLUMN_DOOR_STATUS, lock.getDoorStatus()));
 
-                mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(
-                        TABLE_LOCK_COLUMN_BATTERY_STATUS, lock.getBatteryStatus()));
+                    mLocalSavedUserLocks.put(i, (new JSONObject(mLocalSavedUserLocks.get(i).toString())).put(
+                            TABLE_LOCK_COLUMN_BATTERY_STATUS, lock.getBatteryStatus()));
+
+                    break;
+                }
             }
 
             setValueInSharedPreferenceObject(context, "locks", mLocalSavedUserLocks.toString());

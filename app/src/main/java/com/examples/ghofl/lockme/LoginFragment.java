@@ -81,6 +81,18 @@ public class LoginFragment extends Fragment {
                     } catch (Exception e) {
                         Log.e(getTag(), e.getMessage());
                     }
+
+                    Backendless.UserService.logout(new AsyncCallback<Void>() {
+                        @Override
+                        public void handleResponse(Void response) {
+                        }
+
+                        @Override
+                        public void handleFault(BackendlessFault fault) {
+                            Log.e(getTag(), fault.getMessage());
+                        }
+                    });
+
                     ((MainActivity) getActivity()).comeFromLogin();
                 } else
                     _btn_skip_login.setVisibility(View.INVISIBLE);

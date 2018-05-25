@@ -187,7 +187,8 @@ public class LockListFragment extends Fragment {
                 mLockObject.put(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER, lock_list.get(0).getSerialNumber().getSerialNumber());
                 mUserLockJsonObjectList.add(mLockObject);
 
-                Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), lock_list.get(i));
+                Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), lock_list.get(i),
+                        lock_list.get(i).getSerialNumber().getSerialNumber());
             } catch (Exception e) {
                 Log.e(getTag(), e.getMessage());
             }
