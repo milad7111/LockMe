@@ -4,6 +4,7 @@ package com.examples.ghofl.lockme;
 import android.app.Fragment;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
@@ -58,6 +59,7 @@ public class LockInfoFragment extends Fragment {
     private RequestQueue mRequestQueue;
 
     private Thread mThread;
+    private Handler mHandler;
 
     public LockInfoFragment() {
     }
@@ -69,6 +71,8 @@ public class LockInfoFragment extends Fragment {
         Connection = false;
         mMessageDeliver = false;
         mRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
+
+        mHandler = new Handler();
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -159,9 +163,22 @@ public class LockInfoFragment extends Fragment {
     }
 
     private void requestDirectToggle() {
-        stopThread();
-        mThread = new Thread(new Task());
-        mThread.start();
+//        stopThread();
+//        mThread = new Thread(new Task());
+//        mThread.start();
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (!mMessageDeliver)
+                        Utilities.showSnackBarMessage(getView(), "Nothing received.", Snackbar.LENGTH_SHORT).show();
+
+                    mRippleBackground.stopRippleAnimation();
+                } catch (Exception e) {
+                    Log.e(getTag(), e.getMessage());
+                }
+            }
+        }, 5000);
 
         if (Connection) {
             String url = getString(R.string.esp_http_address_toggle);
@@ -428,6 +445,7 @@ public class LockInfoFragment extends Fragment {
         public void run() {
             try {
                 Thread.sleep(5000);
+                mRippleBackground.stopRippleAnimation();
                 nothingReceived();
             } catch (Exception e) {
                 Log.e(getTag(), e.getMessage());
