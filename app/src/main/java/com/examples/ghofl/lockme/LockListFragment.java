@@ -240,8 +240,8 @@ public class LockListFragment extends Fragment {
             public void onErrorResponse(VolleyError error) {
                 Log.e(getTag(), error.toString());
 
-                if (!Utilities.checkConnectToAnyLockWifi(getActivity().getBaseContext()).contains(getString(R.string.WIFI_PREFIX_NAME)))
-                    try {
+                try {
+                    if (!Utilities.checkConnectToAnyLockWifi(getActivity().getBaseContext()).contains(getString(R.string.WIFI_PREFIX_NAME))) {
                         final Snackbar mSnackBar = Snackbar.make(getView(), R.string.snackbar_message_offline, Snackbar.LENGTH_INDEFINITE);
                         mSnackBar.setAction(R.string.dialog_button_try_again, new View.OnClickListener() {
                             @Override
@@ -250,9 +250,10 @@ public class LockListFragment extends Fragment {
                                 mSnackBar.dismiss();
                             }
                         }).show();
-                    } catch (Exception e) {
-                        Log.e(getTag(), e.getMessage());
                     }
+                } catch (Exception e) {
+                    Log.e(getTag(), e.getMessage());
+                }
             }
         });
         MyRequestQueue.add(MyStringRequest);
