@@ -58,8 +58,8 @@ public class LockInfoFragment extends Fragment {
 
     private RequestQueue mRequestQueue;
 
-    private Thread mThread;
     private Handler mHandler;
+    private Runnable mRunnable;
 
     public LockInfoFragment() {
     }
@@ -97,12 +97,10 @@ public class LockInfoFragment extends Fragment {
         mRippleBackground = view.findViewById(R.id.ripple_background);
 
         try {
-            if (getArguments() != null && getArguments().getString("CheckStatus") != null)
-            {
+            if (getArguments() != null && getArguments().getString("CheckStatus") != null) {
                 saveUpdatedStatusOfLockInLocal(getArguments().getString("CheckStatus"));
                 Connection = true;
-            }
-            else
+            } else
                 getStatusFromDirectConnection();
         } catch (Exception e) {
             Log.e(getTag(), e.getMessage());
@@ -139,7 +137,7 @@ public class LockInfoFragment extends Fragment {
 //                        } else {
 //                            Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
 //                            Log.e(getTag(), getString(R.string.message_wifi_is_off));
-                            requestDirectToggle();
+                        requestDirectToggle();
 //                        }
                     }
                 } catch (Exception e) {
@@ -163,9 +161,9 @@ public class LockInfoFragment extends Fragment {
     }
 
     private void requestDirectToggle() {
-//        stopThread();
-//        mThread = new Thread(new Task());
-//        mThread.start();
+        stopHandler();
+        callHandler(5000);
+
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -213,6 +211,9 @@ public class LockInfoFragment extends Fragment {
     }
 
     private void requestOnlineToggle() {
+        stopHandler();
+        callHandler(5000);
+
         mMessageDeliver = false;
         PublishOptions mPublishOptions = new PublishOptions();
         mPublishOptions.setSubtopic(mLockSerialNumber);
@@ -440,37 +441,32 @@ public class LockInfoFragment extends Fragment {
         //endregion read status from server
     }
 
-    class Task implements Runnable {
-        @Override
-        public void run() {
-            try {
-                Thread.sleep(5000);
-                mRippleBackground.stopRippleAnimation();
-                nothingReceived();
-            } catch (Exception e) {
-                Log.e(getTag(), e.getMessage());
-            }
-        }
-    }
-
     @Override
     public void onStop() {
         super.onStop();
-        stopThread();
+        stopHandler();
     }
 
-    private void stopThread() {
-        try {
-            mThread.stop();
-        } catch (Exception e) {
-            Log.e(getTag(), e.toString());
-        }
+    private void callHandler(int delayTime) {
+        mRunnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (!mMessageDeliver)
+                        Utilities.showSnackBarMessage(getView(), "Nothing received.", Snackbar.LENGTH_SHORT).show();
+                    mRippleBackground.stopRippleAnimation();
+                } catch (Exception e) {
+                    Log.e(getTag(), e.getMessage());
+                }
+            }
+        };
+
+        mHandler.postDelayed(mRunnable, delayTime);
     }
 
-    private void nothingReceived() {
+    private void stopHandler() {
         try {
-            if (!mMessageDeliver)
-                Utilities.showSnackBarMessage(getView(), "Nothing received.", Snackbar.LENGTH_SHORT).show();
+            mHandler.removeCallbacks(mRunnable);
         } catch (Exception e) {
             Log.e(getTag(), e.getMessage());
         }
