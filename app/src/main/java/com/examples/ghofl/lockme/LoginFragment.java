@@ -100,20 +100,12 @@ public class LoginFragment extends Fragment {
         });
     }
 
-    public void onStart() {
-        super.onStart();
-        readMailAndPasswordFromSharedPreference();
-        initializeLoginViews();
-        setVisibilityOfSkipButtonDependsOnInternetConnection();
-    }
-
     public void onResume() {
         super.onResume();
 
+        readMailAndPasswordFromSharedPreference();
+        initializeLoginViews();
         setVisibilityOfSkipButtonDependsOnInternetConnection();
-        if (!Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI) &&
-                !Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_MOBILE))
-            requestConnectToNetworkOrDataMobile();
     }
 
     private void setVisibilityOfSkipButtonDependsOnInternetConnection() {

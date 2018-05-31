@@ -132,13 +132,7 @@ public class LockInfoFragment extends Fragment {
                 try {
                     if (!mRippleBackground.isRippleAnimationRunning()) {
                         mRippleBackground.startRippleAnimation();
-//                        if (Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
-//                            requestDirectToggle();
-//                        } else {
-//                            Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
-//                            Log.e(getTag(), getString(R.string.message_wifi_is_off));
                         requestDirectToggle();
-//                        }
                     }
                 } catch (Exception e) {
                     Log.e(getTag(), e.getMessage());
@@ -289,12 +283,6 @@ public class LockInfoFragment extends Fragment {
                 Log.e(getTag(), error.toString());
                 mRippleBackground.stopRippleAnimation();
                 Connection = false;
-
-//                try {
-//                    getStatusFromDirectConnection();
-//                } catch (Exception e) {
-//                    Log.e(getTag(), e.getMessage());
-//                }
 
                 readServerStatus();
             }
