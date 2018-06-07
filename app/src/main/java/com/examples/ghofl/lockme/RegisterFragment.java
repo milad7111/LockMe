@@ -1,23 +1,34 @@
 package com.examples.ghofl.lockme;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.backendless.Backendless;
 import com.backendless.BackendlessUser;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
 
 public class RegisterFragment extends Fragment {
+
     EditText _edt_register_mail;
     EditText _edt_register_mobile_number;
     EditText _edt_register_password;
@@ -43,16 +54,35 @@ public class RegisterFragment extends Fragment {
 
         _btn_register.setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
-                if (!_edt_register_password.getText().toString().equals(_edt_repeat_password.getText().toString())) {
-                    Toast.makeText(getContext(), R.string.toast_password_not_match, Toast.LENGTH_LONG).show();
-                } else {
+                checkInternetConnection();
+            }
+        });
+
+        return rootView;
+    }
+
+    private void checkInternetConnection() {
+        RequestQueue MyRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
+        String url = getString(R.string.backendless_base_http_url);
+        StringRequest MyStringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener() {
+            @Override
+            public void onResponse(Object response) {
+                Log.e(getTag(), response.toString());
+
+                if (!_edt_register_password.getText().toString().equals(_edt_repeat_password.getText().toString()))
+                    try {
+                        Utilities.showSnackBarMessage(getView(), getString(R.string.toast_password_not_match), Snackbar.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        Log.e(getTag(), e.getMessage());
+                    }
+                else {
                     BackendlessUser user = new BackendlessUser();
                     user.setEmail(_edt_register_mail.getText().toString());
                     user.setPassword(_edt_register_password.getText().toString());
-                    String mobile_number = _edt_register_mobile_number.getText().toString();
-                    if (!mobile_number.isEmpty()) {
-                        user.setProperty("mobile_number", mobile_number);
-                    }
+
+                    String mMobileNumber = _edt_register_mobile_number.getText().toString();
+                    if (!mMobileNumber.isEmpty())
+                        user.setProperty(Utilities.TABLE_USERS_COLUMN_MOBILE_NUMBER, mMobileNumber);
 
                     _prg_register.setVisibility(View.VISIBLE);
                     Backendless.UserService.register(user, new AsyncCallback() {
@@ -60,8 +90,14 @@ public class RegisterFragment extends Fragment {
                         @Override
                         public void handleResponse(Object response) {
                             _prg_register.setVisibility(View.INVISIBLE);
-                            Toast.makeText(getContext(), R.string.toast_user_registered, Toast.LENGTH_LONG).show();
-                            ((MainActivity) getActivity()).switchTab(0, _edt_register_mail.getText().toString());
+
+                            try {
+                                Utilities.showSnackBarMessage(getView(), getString(R.string.toast_user_registered), Snackbar.LENGTH_LONG).show();
+                                ((MainActivity) getActivity()).switchTab(0, _edt_register_mail.getText().toString());
+                            } catch (Exception e) {
+                                Log.e(getTag(), e.getMessage());
+                            }
+
                             _edt_register_mail.setText(null);
                             _edt_register_mobile_number.setText(null);
                             _edt_register_password.setText(null);
@@ -76,9 +112,41 @@ public class RegisterFragment extends Fragment {
                     });
                 }
             }
+        }, new Response.ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+                Log.e(this.getClass().getName(), error.toString());
+                requestConnectToNetworkOrDataMobile();
+            }
         });
+        MyRequestQueue.add(MyStringRequest);
+    }
 
-        return rootView;
+    private void requestConnectToNetworkOrDataMobile() {
+        AlertDialog alertDialog = new AlertDialog.Builder(getActivity()).create();
+        alertDialog.setTitle(getString(R.string.dialog_connect_network));
+        alertDialog.setMessage(getString(R.string.dialog_choose_how_to_connect_internet));
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getString(R.string.dialog_button_data),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        Utilities.setMobileDataEnabled(getActivity(), true);
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getString(R.string.dialog_button_wifi_network),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        Utilities.setWifiEnabled(getActivity(), true);
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.dialog_button_discard),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+        alertDialog.show();
     }
 }
 

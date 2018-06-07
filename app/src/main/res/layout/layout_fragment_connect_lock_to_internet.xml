@@ -19,6 +19,13 @@
             android:textColor="@color/colorAccent"
             android:textSize="24sp" />
 
+        <ProgressBar
+            android:id="@+id/prg_internet_networks"
+            style="@style/MyMaterialTheme"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="visible" />
+
         <ListView
             android:id="@+id/lsv_internet_network"
             android:layout_width="match_parent"

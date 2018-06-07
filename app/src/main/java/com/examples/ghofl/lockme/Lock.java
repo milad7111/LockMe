@@ -1,11 +1,14 @@
 package com.examples.ghofl.lockme;
 
-import android.util.Log;
+import android.hardware.usb.UsbRequest;
 
 import com.backendless.Backendless;
-import com.backendless.async.callback.AsyncCallback;
-import com.backendless.messaging.MessageStatus;
-import com.backendless.messaging.PublishOptions;
+import com.backendless.exceptions.BackendlessFault;
+import com.backendless.persistence.DataQueryBuilder;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Created by family on 4/24/2018.
@@ -13,84 +16,94 @@ import com.backendless.messaging.PublishOptions;
 
 public class Lock {
 
-    Integer mLockID;
-    String mSerialNumber;
-    Boolean mLockStatus;
-    Boolean mDoorStatus;
-    Boolean mIsConnected;
-    Integer mBatteryCharge;
-    Integer mSignalStrength;
-    Integer mUserID;
+    private String objectId;
+    private Boolean lock_status;
+    private Boolean door_status;
+    private Boolean connection_status;
+    private Integer battery_status;
+    private Integer wifi_status;
+    private Date created;
+    private Date updated;
+    private List<UserLock> related_users;
+    private SerialNumber serial_number;
 
-    public Integer getmLockID() {
-        return mLockID;
+    public String getObjectId() {
+        return objectId;
     }
 
-    public void setmLockID(Integer mLockID) {
-        this.mLockID = mLockID;
+    public void setObjectId(String objectId) {
+        this.objectId = objectId;
     }
 
-    public String getmSerialNumber() {
-        return mSerialNumber;
+    public SerialNumber getSerialNumber() {
+        return serial_number;
     }
 
-    public void setmSerialNumber(String mSerialNumber) {
-        this.mSerialNumber = mSerialNumber;
+    public void setSerialNumber(SerialNumber serialNumber) {
+        this.serial_number = serialNumber;
     }
 
-    public Boolean getmLockStatus() {
-        return mLockStatus;
+    public Boolean getLockStatus() {
+        return lock_status;
     }
 
-    public void setmLockStatus(Boolean mLockStatus) {
-        this.mLockStatus = mLockStatus;
+    public void setLockStatus(Boolean lockStatus) {
+        this.lock_status = lockStatus;
     }
 
-    public Boolean getmDoorStatus() {
-        return mDoorStatus;
+    public Boolean getDoorStatus() {
+        return door_status;
     }
 
-    public void setmDoorStatus(Boolean mDoorStatus) {
-        this.mDoorStatus = mDoorStatus;
+    public void setDoorStatus(Boolean doorStatus) {
+        this.door_status = doorStatus;
     }
 
-    public Boolean getmIsConnected() {
-        return mIsConnected;
+    public Boolean getConnectionStatus() {
+        return connection_status;
     }
 
-    public void setmIsConnected(Boolean mIsConnected) {
-        this.mIsConnected = mIsConnected;
+    public void setConnectionStatus(Boolean connectionStatus) {
+        this.connection_status = connectionStatus;
     }
 
-    public Integer getmBatteryCharge() {
-        //it should be between 1-4
-        if(0<mBatteryCharge&& mBatteryCharge<5)
-        return mBatteryCharge;
-        //means that data is wrong inserted
-        else return -1;
+    public Integer getBatteryStatus() {
+        return battery_status;
     }
 
-    public void setmBatteryCharge(Integer mBatteryCharge) {
-        this.mBatteryCharge = mBatteryCharge;
+    public void setBatteryStatus(Integer batteryStatus) {
+        this.battery_status = batteryStatus;
     }
 
-    public Integer getmSignalStrength() {
-        if(0<mSignalStrength&& mSignalStrength<5)
-            return mSignalStrength;
-        else return -1;
+    public Integer getWifiStatus() {
+        return wifi_status;
     }
 
-    public void setmSignalStrength(Integer mSignalStrength) {
-        this.mSignalStrength = mSignalStrength;
+    public void setWifiStatus(Integer wifiStatus) {
+        this.wifi_status = wifiStatus;
     }
 
-    public Integer getmUserID() {
-        return mUserID;
+    public Date getCreated() {
+        return created;
     }
 
-    public void setmUserID(Integer mUserID) {
-        this.mUserID = mUserID;
+    public void setCreated(Date created) {
+        this.created = created;
     }
 
+    public Date getUpdated() {
+        return updated;
+    }
 
+    public void setUpdated(Date updated) {
+        this.updated = updated;
+    }
+
+    public String getLockName(int index) {
+        return related_users.get(index).getLockName();
+    }
+
+    public Boolean getAdminStatus(int index) {
+        return related_users.get(index).getAdminStatus();
+    }
 }
