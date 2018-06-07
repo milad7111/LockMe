@@ -113,5 +113,6 @@
     <string name="channel_toggle">toggle</string>
     <string name="snackbar_message_direct_order_failed">Direct Order Failed.</string>
     <string name="snackbar_message_command_sent">Command sent, Waiting for response ...</string>
+    <string name="command_done">Command Done.</string>
 </resources>
 

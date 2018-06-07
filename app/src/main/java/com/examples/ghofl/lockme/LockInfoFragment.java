@@ -2,7 +2,6 @@ package com.examples.ghofl.lockme;
 
 
 import android.app.Fragment;
-import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -26,12 +25,18 @@ import com.backendless.Subscription;
 import com.backendless.async.callback.AsyncCallback;
 import com.backendless.exceptions.BackendlessFault;
 import com.backendless.messaging.Message;
-import com.backendless.messaging.MessageStatus;
-import com.backendless.messaging.PublishOptions;
 import com.backendless.messaging.SubscriptionOptions;
 import com.backendless.persistence.DataQueryBuilder;
 import com.skyfishjy.library.RippleBackground;
 
+import org.eclipse.paho.android.service.MqttAndroidClient;
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.JSONObject;
 
 import java.util.List;
@@ -61,6 +66,10 @@ public class LockInfoFragment extends Fragment {
     private Handler mHandler;
     private Runnable mRunnable;
 
+    private MqttAndroidClient client;
+    private MqttConnectOptions mMqttOptions;
+    private IMqttToken mToken;
+
     public LockInfoFragment() {
     }
 
@@ -71,8 +80,9 @@ public class LockInfoFragment extends Fragment {
         Connection = false;
         mMessageDeliver = false;
         mRequestQueue = Volley.newRequestQueue(getActivity().getBaseContext());
-
         mHandler = new Handler();
+
+        handleMqtt();
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -209,63 +219,43 @@ public class LockInfoFragment extends Fragment {
         callHandler(5000);
 
         mMessageDeliver = false;
-        PublishOptions mPublishOptions = new PublishOptions();
-        mPublishOptions.setSubtopic(mLockSerialNumber);
-        Backendless.Messaging.publish(getString(R.string.channel_toggle), getString(R.string.command_toggle),
-                mPublishOptions, new AsyncCallback<MessageStatus>() {
-                    public void handleResponse(MessageStatus messageStatus) {
-                        Log.i(getTag(), messageStatus.toString());
 
-                        if (messageStatus.getErrorMessage() == null) {
-                            try {
-                                mSnacbar = Utilities.showSnackBarMessage(
-                                        getView(),
-                                        getString(R.string.snackbar_message_command_sent),
-                                        Snackbar.LENGTH_SHORT);
-                                mSnacbar.show();
-                            } catch (Exception e) {
-                                Log.e(getTag(), e.getMessage());
-                            }
-                            setAppSubscriber();
-                        }
-                    }
+        String payload = "toggle";
+        try {
+            IMqttDeliveryToken publishToken = client.publish("toggle/" + mLockSerialNumber,
+                    new MqttMessage(payload.getBytes("UTF-8")));
+            publishToken.setActionCallback(new IMqttActionListener() {
+                @Override
+                public void onSuccess(IMqttToken asyncActionToken) {
+                    Log.i(getTag(), "success publish");
 
-                    public void handleFault(BackendlessFault backendlessFault) {
-                        Log.e(getTag(), backendlessFault.getMessage());
-                        Utilities.showSnackBarMessage(getView(), getString(R.string.log_cannot_connect), Snackbar.LENGTH_SHORT).show();
-                        mRippleBackground.stopRippleAnimation();
+                    try {
+                        mSnacbar = Utilities.showSnackBarMessage(
+                                getView(),
+                                getString(R.string.snackbar_message_command_sent),
+                                Snackbar.LENGTH_SHORT);
+                        mSnacbar.show();
+                    } catch (Exception e) {
+                        Log.e(getTag(), e.getMessage());
                     }
-                });
-    }
+                }
 
-    private void setAppSubscriber() {
-        SubscriptionOptions mSubscriptionOptions = new SubscriptionOptions();
-        mSubscriptionOptions.setSubtopic(mLockSerialNumber);
-        Backendless.Messaging.subscribe(getString(R.string.channel_response_toggle), new AsyncCallback<List<Message>>() {
-                    public void handleResponse(List<Message> response) {
-                        Log.i(getTag(), response.toString());
-                        mMessageDeliver = true;
-                        readServerStatus();
-                        mRippleBackground.stopRippleAnimation();
-                    }
+                @Override
+                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    Log.e(getTag(), "failure publish");
 
-                    public void handleFault(BackendlessFault fault) {
-                        Log.e(getTag(), fault.getMessage());
-                        mMessageDeliver = false;
+                    try {
+                        handleMqtt();
+                        Utilities.showSnackBarMessage(getView(), getString(R.string.snackbar_action_try), Snackbar.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Log.e(getTag(), e.getMessage());
                     }
-                },
-                mSubscriptionOptions, new AsyncCallback<Subscription>() {
-                    public void handleResponse(Subscription response) {
-                        Log.e(getTag(), response.toString());
-                        Subscription mSubscription = response;
-                        mSubscription.cancelSubscription();
-                    }
-
-                    public void handleFault(BackendlessFault fault) {
-                        Log.e(getTag(), fault.getMessage());
-                        mRippleBackground.stopRippleAnimation();
-                    }
-                });
+                    mRippleBackground.stopRippleAnimation();
+                }
+            });
+        } catch (Exception e) {
+            Log.e(getTag(), e.getMessage());
+        }
     }
 
     private void getStatusFromDirectConnection() {
@@ -455,6 +445,89 @@ public class LockInfoFragment extends Fragment {
     private void stopHandler() {
         try {
             mHandler.removeCallbacks(mRunnable);
+        } catch (Exception e) {
+            Log.e(getTag(), e.getMessage());
+        }
+    }
+
+    private void handleMqtt() {
+        client = new MqttAndroidClient(
+                getActivity().getBaseContext(),
+                "tcp://broker.hivemq.com:1883",
+                MqttClient.generateClientId());
+
+        client.setCallback(new MqttCallback() {
+            @Override
+            public void connectionLost(Throwable cause) {
+                Log.e(getTag(), "Connection lost! " + cause);
+            }
+
+            @Override
+            public void messageArrived(String topic, MqttMessage message) {
+                try {
+                    try {
+                        Utilities.showSnackBarMessage(getView(), getString(R.string.command_done), Snackbar.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        Log.e(getTag(), e.getMessage());
+                    }
+
+                    String response = new String(message.getPayload());
+                    Log.i(getTag(), response);
+
+                    mMessageDeliver = true;
+                    mRippleBackground.stopRippleAnimation();
+
+                    Utilities.changeLockStatusInView(
+                            (response.equals("t")),
+                            _img_lock_status,
+                            _txv_lock_status);
+                } catch (Exception e) {
+                    Log.e(getTag(), e.getMessage());
+                }
+            }
+
+            @Override
+            public void deliveryComplete(IMqttDeliveryToken token) {
+                Log.i(getTag(), token.toString());
+            }
+        });
+
+        try {
+            mMqttOptions = new MqttConnectOptions();
+            mToken = client.connect(mMqttOptions);
+            mToken.setActionCallback(new IMqttActionListener() {
+                @Override
+                public void onSuccess(IMqttToken asyncActionToken) {
+                    // We are connected
+                    Log.i(getTag(), "Connection to broker Success.");
+
+                    //region subscribe
+                    try {
+                        IMqttToken subToken = client.subscribe("response/toggle/123456789", 1);
+
+                        subToken.setActionCallback(new IMqttActionListener() {
+                            @Override
+                            public void onSuccess(IMqttToken asyncActionToken) {
+                                Log.i(getTag(), "success subscribe");
+                            }
+
+                            @Override
+                            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                                Log.e(getTag(), "failure subscribe");
+                            }
+                        });
+                    } catch (Exception e) {
+                        Log.e(getTag(), e.getMessage());
+                    }
+                    //endregion
+                }
+
+                @Override
+                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    // Something went wrong e.g. connection timeout or firewall problems
+                    Log.e(getTag(), "Connection to broker Fail");
+                }
+            });
         } catch (Exception e) {
             Log.e(getTag(), e.getMessage());
         }

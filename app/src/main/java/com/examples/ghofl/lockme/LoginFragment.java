@@ -113,12 +113,6 @@ public class LoginFragment extends Fragment {
             _btn_skip_login.setVisibility(View.VISIBLE);
         else
             _btn_skip_login.setVisibility(View.INVISIBLE);
-
-        if (!Utilities.checkMobileDataOrWifiEnabled(getActivity().getBaseContext(), ConnectivityManager.TYPE_WIFI)) {
-            Utilities.setWifiEnabled(getActivity().getBaseContext(), true);
-            setVisibilityOfSkipButtonDependsOnInternetConnection();
-            Log.e(getTag(), getString(R.string.message_wifi_is_off));
-        }
     }
 
     private void readMailAndPasswordFromSharedPreference() {
