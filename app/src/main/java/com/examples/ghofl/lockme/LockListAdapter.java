@@ -184,49 +184,49 @@ public class LockListAdapter extends RecyclerView.Adapter<LockListAdapter.ViewHo
     }
 
     private void checkDirectConnection(final int position) {
-        String mConnectedWifiName = Utilities.checkConnectToAnyLockWifi(mContext).replace("\"", "");
-        String mWifiNameOfSelectedLock = null;
-        try {
-            mWifiNameOfSelectedLock = Utilities.getLockFromLocalWithSerialNumber(
-                    mContext,
-                    mData.get(position)
-                            .getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
-                    .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID);
-
-            if (!mConnectedWifiName.equals(mWifiNameOfSelectedLock)) {
-                WifiConfiguration wifiConfig = new WifiConfiguration();
-                WifiManager mWifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                wifiConfig.SSID = String.format("\"%s\"",
-                        Utilities.getLockFromLocalWithSerialNumber(mContext, mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
-                                .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID));
-
-                wifiConfig.preSharedKey = String.format("\"%s\"", mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
-                wifiConfig.allowedKeyManagement.set(1);
-                int netId = mWifiManager.addNetwork(wifiConfig);
-                if (netId == -1) {
-                    Log.i(getClass().getName(), mContext.getString(R.string.error_wifi_initialization));
-                } else {
-                    List<WifiConfiguration> list = mWifiManager.getConfiguredNetworks();
-                    Iterator<WifiConfiguration> mWifiManagerConfiguredNetworks = list.iterator();
-
-                    while (mWifiManagerConfiguredNetworks.hasNext()) {
-                        WifiConfiguration i = mWifiManagerConfiguredNetworks.next();
-                        if (i.SSID != null && i.SSID.equals(String.format("\"%s\"",
-                                Utilities.getLockFromLocalWithSerialNumber(mContext, mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
-                                        .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID)))) {
-                            if (mWifiManager.enableNetwork(i.networkId, true)) {
-                                mWifiManager.saveConfiguration();
-                            }
-                            break;
-                        }
-                    }
-                }
-
-                Utilities.sleepSomeTime(3000);
-            }
-        } catch (Exception e) {
-            Log.e(this.getClass().getName(), e.getMessage());
-        }
+//        String mConnectedWifiName = Utilities.checkConnectToAnyLockWifi(mContext).replace("\"", "");
+//        String mWifiNameOfSelectedLock = null;
+//        try {
+//            mWifiNameOfSelectedLock = Utilities.getLockFromLocalWithSerialNumber(
+//                    mContext,
+//                    mData.get(position)
+//                            .getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
+//                    .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID);
+//
+//            if (!mConnectedWifiName.equals(mWifiNameOfSelectedLock)) {
+//                WifiConfiguration wifiConfig = new WifiConfiguration();
+//                WifiManager mWifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+//                wifiConfig.SSID = String.format("\"%s\"",
+//                        Utilities.getLockFromLocalWithSerialNumber(mContext, mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
+//                                .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID));
+//
+//                wifiConfig.preSharedKey = String.format("\"%s\"", mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER));
+//                wifiConfig.allowedKeyManagement.set(1);
+//                int netId = mWifiManager.addNetwork(wifiConfig);
+//                if (netId == -1) {
+//                    Log.i(getClass().getName(), mContext.getString(R.string.error_wifi_initialization));
+//                } else {
+//                    List<WifiConfiguration> list = mWifiManager.getConfiguredNetworks();
+//                    Iterator<WifiConfiguration> mWifiManagerConfiguredNetworks = list.iterator();
+//
+//                    while (mWifiManagerConfiguredNetworks.hasNext()) {
+//                        WifiConfiguration i = mWifiManagerConfiguredNetworks.next();
+//                        if (i.SSID != null && i.SSID.equals(String.format("\"%s\"",
+//                                Utilities.getLockFromLocalWithSerialNumber(mContext, mData.get(position).getString(Utilities.TABLE_LOCK_COLUMN_SERIAL_NUMBER))
+//                                        .getString(Utilities.TABLE_LOCK_COLUMN_LOCK_SSID)))) {
+//                            if (mWifiManager.enableNetwork(i.networkId, true)) {
+//                                mWifiManager.saveConfiguration();
+//                            }
+//                            break;
+//                        }
+//                    }
+//                }
+//
+//                Utilities.sleepSomeTime(3000);
+//            }
+//        } catch (Exception e) {
+//            Log.e(this.getClass().getName(), e.getMessage());
+//        }
 
         RequestQueue MyRequestQueue = Volley.newRequestQueue(mContext);
         String url = mContext.getString(R.string.esp_http_address_check);
