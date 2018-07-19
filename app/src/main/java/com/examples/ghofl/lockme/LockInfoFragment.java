@@ -485,8 +485,8 @@ public class LockInfoFragment extends Fragment {
                     mMessageDeliver = true;
                     mRippleBackground.stopRippleAnimation();
 
-                    if (response.equals("200: ok"))
-                        readServerStatus();
+                    if (response.equals("200"))
+                        callHandlerReadServerStatus(5000);
 
                 } catch (Exception e) {
                     Log.e(getTag(), e.getMessage());
@@ -563,6 +563,21 @@ public class LockInfoFragment extends Fragment {
                         Log.e(getTag(), fault.getMessage());
                     }
                 });
+    }
+
+    private void callHandlerReadServerStatus(int delayTime) {
+        mRunnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    readServerStatus();
+                } catch (Exception e) {
+                    Log.e(getTag(), e.getMessage());
+                }
+            }
+        };
+
+        mHandler.postDelayed(mRunnable, delayTime);
     }
 }
 
