@@ -70,6 +70,9 @@ public class LockInfoFragment extends Fragment {
     private MqttConnectOptions mMqttOptions;
     private IMqttToken mToken;
 
+    private View mainView = null;
+    private Subscription mSubscriptionAlarm = null;
+
     public LockInfoFragment() {
     }
 
@@ -83,6 +86,7 @@ public class LockInfoFragment extends Fragment {
         mHandler = new Handler();
 
         handleMqtt();
+        setAppSubscriberForAlarms();
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -92,6 +96,7 @@ public class LockInfoFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        mainView = view;
 
         //defining views
         _img_battery_status = view.findViewById(R.id.img_battery_status);
@@ -423,6 +428,9 @@ public class LockInfoFragment extends Fragment {
     public void onStop() {
         super.onStop();
         stopHandler();
+
+        if (mSubscriptionAlarm != null)
+            mSubscriptionAlarm.cancelSubscription();
     }
 
     private void callHandler(int delayTime) {
@@ -453,7 +461,7 @@ public class LockInfoFragment extends Fragment {
     private void handleMqtt() {
         client = new MqttAndroidClient(
                 getActivity().getBaseContext(),
-                "tcp://broker.hivemq.com:1883",
+                "tcp://5.196.101.48:1883",
                 MqttClient.generateClientId());
 
         client.setCallback(new MqttCallback() {
@@ -477,10 +485,9 @@ public class LockInfoFragment extends Fragment {
                     mMessageDeliver = true;
                     mRippleBackground.stopRippleAnimation();
 
-                    Utilities.changeLockStatusInView(
-                            (response.equals("t")),
-                            _img_lock_status,
-                            _txv_lock_status);
+                    if (response.equals("200: ok"))
+                        readServerStatus();
+
                 } catch (Exception e) {
                     Log.e(getTag(), e.getMessage());
                 }
@@ -531,6 +538,31 @@ public class LockInfoFragment extends Fragment {
         } catch (Exception e) {
             Log.e(getTag(), e.getMessage());
         }
+    }
+
+    private void setAppSubscriberForAlarms() {
+        SubscriptionOptions mSubscriptionOptions = new SubscriptionOptions();
+        mSubscriptionOptions.setSubtopic(mLockSerialNumber);
+        Backendless.Messaging.subscribe("theft", new AsyncCallback<List<Message>>() {
+                    public void handleResponse(List<Message> response) {
+                        Log.i(getTag(), response.get(0).getData().toString());
+                        Utilities.showSnackBarMessage(mainView, response.get(0).getData().toString(), Snackbar.LENGTH_LONG).show();
+                    }
+
+                    public void handleFault(BackendlessFault fault) {
+                        Log.e(getTag(), fault.getMessage());
+                    }
+                },
+                mSubscriptionOptions, new AsyncCallback<Subscription>() {
+                    public void handleResponse(Subscription response) {
+                        Log.e(getTag(), response.toString());
+                        mSubscriptionAlarm = response;
+                    }
+
+                    public void handleFault(BackendlessFault fault) {
+                        Log.e(getTag(), fault.getMessage());
+                    }
+                });
     }
 }
 
