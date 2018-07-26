@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
@@ -411,6 +412,8 @@ public class LockInfoFragment extends Fragment {
                                 _img_wifi_status);
 
                         Utilities.setStatusInLocalForALock(getActivity().getBaseContext(), locks.get(0), mLockSerialNumber);
+
+                        Toast.makeText(getActivity(), "Update from Server", Toast.LENGTH_SHORT).show();
                     }
                 } catch (Exception e) {
                     Log.e(getTag(), e.getMessage());
@@ -486,7 +489,7 @@ public class LockInfoFragment extends Fragment {
                     mRippleBackground.stopRippleAnimation();
 
                     if (response.equals("200"))
-                        callHandlerReadServerStatus(5000);
+                        callHandlerReadServerStatus(10000);
 
                 } catch (Exception e) {
                     Log.e(getTag(), e.getMessage());
